@@ -1,6 +1,6 @@
 [project]
 name = "el-loom"
-version = "0.1.2"
+version = "0.1.3"
 description = "An integrated software platform designed to handle the complexities of quantum error correction, seamlessly transforming applications into fault-tolerant, hardware-ready versions."
 authors = [
     { name = "Entropica Labs Pte Ltd", email = "info@entropicalabs.com" },
@@ -16,11 +16,8 @@ dependencies = [
     "networkx~=3.5",
 
     # Supported executors
-    "pennylane-catalyst~=0.13.0",
     "openqasm3~=1.0.0",
     "stim (>=1.14.0,<2.0.0)",
-    "cudaq~=0.12.0 ; sys_platform != 'darwin'",
-    "cuda-quantum-cu12~=0.12.0 ; sys_platform != 'darwin'",
 ]
 
 [tool.poetry]
@@ -44,9 +41,9 @@ pylint = "^3.3.6"
 ipykernel = "^6.29.5"
 nbconvert = ">=7.16.6"
 
-
 [tool.poetry.group.docs]
 optional = true
+include-groups = ["notebooks"]
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^8.0"
@@ -54,10 +51,7 @@ sphinx-autodoc-typehints = "^3.0"
 sphinx-copybutton = "^0.5.2"
 sphinx-rtd-theme = "^3.0"
 sphinx-autobuild = "^2024.10.3"
-qiskit = ">=2.1.0,<3.0.0"
-qiskit-aer = ">=0.17.1,<0.18.0"
-qiskit-qasm3-import = ">=0.6.0,<0.7.0"
-myst-nb = ">=1.3.0"                    # Required for displaying jupyter notebooks
+myst-nb = ">=1.3.0"               # Required for displaying jupyter notebooks
 
 [tool.poetry.group.notebooks]
 optional = true
@@ -95,8 +89,8 @@ disable = [
     "duplicate-code" # ignore duplicate code warnings
 ]
 
-# [tool.pylint.FORMAT]
-# max-line-length = 88
+[tool.pylint.FORMAT]
+max-line-length = 88
 
 [tool.pylint.REPORTS]
 output-format = "parseable"  # short CI-friendly messages

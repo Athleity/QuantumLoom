@@ -56,7 +56,7 @@ class Operation:
             (
                 subsubclass
                 for subclass in cls.__subclasses__()  # Base, Code or Logical (abstract)
-                for subsubclass in subclass.__subclasses__()  # All subsequent subclasses
+                for subsubclass in subclass.__subclasses__()  # Subsequent subclasses
                 if subsubclass.__name__ == cls_name
             ),
             None,

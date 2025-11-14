@@ -62,7 +62,8 @@ def is_circuit_valid(
             
                 - The keys are the logical operator indices
                 - The values are lists of strings or integers (0 or 1) that represent \
-                the classical channels and parity flips applied to the logical operators.
+                the classical channels and parity flips applied to the logical \
+                operators.
                 
     - The input code stabilizers are measured correctly
 
@@ -422,8 +423,9 @@ def validate_logical_state_transformations_with_parity(
                 if not isinstance(cbit, (str, int)):
                     raise TypeError(
                         "The value of the second element of each tuple in "
-                        "logical_state_transformations_with_parity should be an iterable"
-                        f" of strings or ints. Found {cbit} of type {type(cbit)}."
+                        "logical_state_transformations_with_parity should be an "
+                        "iterable of strings or ints. "
+                        f"Found {cbit} of type {type(cbit)}."
                     )
                 if isinstance(cbit, str):
                     is_channel_in_output = any(
@@ -556,7 +558,7 @@ def find_final_swaps(
     return swap_operations
 
 
-# pylint: disable=too-many-locals, anomalous-backslash-in-string
+# pylint: disable=anomalous-backslash-in-string
 def get_validator_cliffordsim_operations(
     circuit: Circuit,
     input_block: Block,

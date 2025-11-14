@@ -305,12 +305,13 @@ class Block:  # pylint: disable=too-many-instance-attributes,too-many-public-met
         for stab_uuid, syndrome_circ_uuid in stabilizer_to_circuit.items():
             if stab_uuid not in stabilizer_dict.keys():
                 raise ValueError(
-                    f"Stabilizer with uuid {stab_uuid} is not present in the stabilizers."
+                    f"Stabilizer with uuid {stab_uuid} is not present in the "
+                    "stabilizers."
                 )
             if syndrome_circ_uuid not in syndrome_circs_dict.keys():
                 raise ValueError(
-                    f"Syndrome circuit with uuid {syndrome_circ_uuid} is not present in "
-                    f"the syndrome circuits."
+                    f"Syndrome circuit with uuid {syndrome_circ_uuid} is not present "
+                    f"in the syndrome circuits."
                 )
             if (
                 stabilizer_dict[stab_uuid].pauli
@@ -662,16 +663,16 @@ class Block:  # pylint: disable=too-many-instance-attributes,too-many-public-met
         """
         Calculate Pauli charges for all data qubits in the given Block. The Pauli
         charges are calculated from the stabilizers of the Block. For every data qubit,
-        one counts how often the data qubit is included in stabilizers in the X, Y, and Z
-        basis respectively. If it is included in an odd number of X, Y, or Z stabilizers,
-        the data qubit has a Pauli charge of X, Y, or Z respectively. We only report a
-        single Pauli charge where multiple charges are combined into one charge according to
-        the product of Pauli matrices. E.g. if a data qubit has a Pauli charge of both X and
-        Z, the combined Pauli charge is Y since Y=iXZ.
+        one counts how often the data qubit is included in stabilizers in the X, Y, and
+        Z basis respectively. If it is included in an odd number of X, Y, or Z
+        stabilizers, the data qubit has a Pauli charge of X, Y, or Z respectively. We
+        only report a single Pauli charge where multiple charges are combined into one
+        charge according to the product of Pauli matrices. E.g. if a data qubit has a
+        Pauli charge of both X and Z, the combined Pauli charge is Y since Y=iXZ.
 
-        E.g. for a d=5 rotated surface code, plotting the Pauli charges on top of the data
-        qubits would look like this (where we omitted plotting data qubits with no Pauli
-        charge):
+        E.g. for a d=5 rotated surface code, plotting the Pauli charges on top of the
+        data qubits would look like this (where we omitted plotting data qubits with no
+        Pauli charge):
 
         .. code-block::
 
@@ -686,9 +687,10 @@ class Block:  # pylint: disable=too-many-instance-attributes,too-many-public-met
             Y -- X -- X -- X -- Y
 
         In this example of the rotated surface code, the four logical corners have Pauli
-        charge Y, and there are two boundaries with Pauli charge X and two with Pauli charge
-        Z. The bulk data qubits have no Pauli charge. No Pauli charge is represented by "_"
-        in the output of this function but we omitted plotting these in the example above.
+        charge Y, and there are two boundaries with Pauli charge X and two with Pauli
+        charge Z. The bulk data qubits have no Pauli charge. No Pauli charge is
+        represented by "_" in the output of this function but we omitted plotting these
+        in the example above.
 
         Returns
         -------
@@ -914,7 +916,8 @@ class Block:  # pylint: disable=too-many-instance-attributes,too-many-public-met
         ):  # Remove unit vector
             raise ValueError(
                 f"The shift position has a wrong dimension of {len(position)}. "
-                f"Expected {len(self.logical_x_operators[0].data_qubits[0]) - 1} instead."
+                f"Expected {len(self.logical_x_operators[0].data_qubits[0]) - 1} "
+                "instead."
             )
 
         if new_label is None:

@@ -50,9 +50,11 @@ class Measurement(MeasurementOperation):
     reg_name: Optional[str]
         The name of the classical register to write the measurement output to.
     bit_order: Optional[int]
-        The ordering of the bit within the classical register to write the measurement output to.
+        The ordering of the bit within the classical register to write the measurement
+        output to.
     bit_id: Optional[str]
-        The bit ID of the bit within the classical register to write the measurement output to.
+        The bit ID of the bit within the classical register to write the measurement
+        output to.
     basis: str
         The basis of the measurement. Default is Z.
     bias: float

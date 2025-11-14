@@ -84,7 +84,7 @@ class RotatedSurfaceCode(Block):  # pylint: disable=too-many-public-methods
         d=3 rotated surface code, with ``x_boundary=Orientation.H`` and
         ``weight_2_stab_is_first_row=True``):
 
-        .. code-block::
+        ..code-block::
 
                                Z
               (0,0) --- (1,0) --- (2,0)
@@ -949,11 +949,11 @@ class RotatedSurfaceCode(Block):  # pylint: disable=too-many-public-methods
                 (top-left, bottom-left, bottom-right, top-right)
                 Visualized example::
 
-                1-------4
-                |       |
-                |       |
-                |       |
-                2-------3
+                    1-------4
+                    |       |
+                    |       |
+                    |       |
+                    2-------3
 
         Type 2: U-config
                 Block has rectangular shape with size (d, 2d-1) or (2d-1, d)
@@ -964,11 +964,11 @@ class RotatedSurfaceCode(Block):  # pylint: disable=too-many-public-methods
                 (long_end, middle_edge, angle, short_end)
                 Visualized example (can be rotated)::
 
-                1-------|
-                |       |
-                |       2
-                |       |
-                3-------4
+                    1-------|
+                    |       |
+                    |       2
+                    |       |
+                    3-------4
 
         Type 3: L-config
                 Block has rectangular shape with size (d, 2d-1) or (2d-1, d)
@@ -979,11 +979,11 @@ class RotatedSurfaceCode(Block):  # pylint: disable=too-many-public-methods
                 (long_end, middle_edge, angle, short_end)
                 Visualized example (can be rotated)::
 
-                1-------|
-                |       |
-                2       |
-                |       |
-                3-------4
+                    1-------|
+                    |       |
+                    2       |
+                    |       |
+                    3-------4
 
         Type 0: Other configs
 

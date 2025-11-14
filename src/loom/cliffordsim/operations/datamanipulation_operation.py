@@ -37,8 +37,8 @@ class DataManipulationOperation(Operation):
 @dataclass
 class UpdateTableau(DataManipulationOperation):
     """
-    An Operation that updates the state of the Tableau in the Engine during runtime. Note
-    that the tableau must be a numpy array with bits, 0s and 1s, for every element.
+    An Operation that updates the state of the Tableau in the Engine during runtime.
+    Note that the tableau must be a numpy array with bits, 0s and 1s, for every element.
 
     Parameters
     ----------
@@ -61,8 +61,8 @@ class CreatePauliFrame(DataManipulationOperation):
     """
     An Operation that creates a Pauli Frame within the Engine during runtime. The
     Pauli Frame created will be associated with the name provided by the user, and can
-    be accessed at runtime by other operations. Since there can be multiple Pauli Frames,
-    the frames will be associated by their names.
+    be accessed at runtime by other operations. Since there can be multiple Pauli
+    Frames, the frames will be associated by their names.
     """
 
     name: str = field(default="CreatePauliFrame", init=False)
@@ -72,7 +72,8 @@ class CreatePauliFrame(DataManipulationOperation):
         # Check validity of pauli_frame
         if not isinstance(self.pauli_frame, PauliFrame):
             raise TypeError(
-                f"Invalid PauliFrame '{self.pauli_frame}'. Must be of type 'PauliFrame'."
+                f"Invalid PauliFrame '{self.pauli_frame}'. Must be of type "
+                "'PauliFrame'."
             )
 
 
@@ -91,7 +92,8 @@ class RecordPauliFrame(DataManipulationOperation):
         # Check validity of pauli_frame
         if not isinstance(self.pauli_frame, PauliFrame):
             raise TypeError(
-                f"Invalid PauliFrame '{self.pauli_frame}'. Must be of type 'PauliFrame'."
+                f"Invalid PauliFrame '{self.pauli_frame}'. Must be of type "
+                "'PauliFrame'."
             )
 
 
@@ -139,7 +141,8 @@ class CreateClassicalRegister(DataManipulationOperation):
                     raise TypeError("The bit ID must be a string.")
             if len(self.bit_ids) != self.no_of_bits:
                 raise ValueError(
-                    "The number of bit IDs must be equal to the number of bits in the register."
+                    "The number of bit IDs must be equal to the number of bits in the "
+                    "register."
                 )
 
 

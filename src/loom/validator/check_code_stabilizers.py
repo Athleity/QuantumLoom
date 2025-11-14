@@ -96,7 +96,6 @@ class CodeStabilizerCheck(AbstractValidityCheck):
                 return "Some code stabilizer(s) were not found in the output."
 
 
-# pylint: disable=too-many-arguments, too-many-locals, too-many-positional-arguments
 def check_code_stabilizers_output(
     base_cliffordsim_operations: tuple[Operation, ...],
     input_block: Block,
@@ -168,7 +167,7 @@ def check_code_stabilizers_output(
     ]
 
     # Find the stabilizers with exact values that are missing in the output
-    existing_stabilizers_with_incorrect_parity = []
+    existing_stabs_with_incorrect_parity = []
     missing_stabilizers = []
     for stab in output_stabilizers_with_exact_values:
         # Get the stabilizer as a signed Pauli operator
@@ -190,7 +189,7 @@ def check_code_stabilizers_output(
             ):
                 # If the stabilizer is in the output, but with incorrect parity,
                 # add it to the list of stabilizers with incorrect parity
-                existing_stabilizers_with_incorrect_parity += [stab]
+                existing_stabs_with_incorrect_parity += [stab]
             else:
                 # If neither the stabilizer nor its flipped version is in the output,
                 # it is missing
@@ -213,6 +212,6 @@ def check_code_stabilizers_output(
     return CodeStabilizerCheck(
         output=CodeStabilizerCheckOutput(
             missing_stabilizers=missing_stabilizers,
-            stabilizers_with_incorrect_parity=existing_stabilizers_with_incorrect_parity,
+            stabilizers_with_incorrect_parity=existing_stabs_with_incorrect_parity,
         )
     )

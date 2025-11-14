@@ -142,7 +142,8 @@ class Circuit:
     @classmethod
     def adjust_channels(cls, channels: Union[Channel, list[Channel]], values: dict):
         """
-        Adjusts the channels of the circuit based on the channels of the nested circuits.
+        Adjusts the channels of the circuit based on the channels of the
+        nested circuits.
 
         Parameters
         ----------
@@ -354,9 +355,9 @@ class Circuit:
             circuit = []
         if isinstance(circuit, tuple) or len(circuit) < 2:
             raise ValueError(
-                "Error while creating circuit via from_circuit(): The circuit must be a "
-                "list of circuits. If the intention is to copy a circuit to deal with "
-                "Channel objects directly, use the clone() method instead."
+                "Error while creating circuit via from_circuit(): The circuit must be "
+                "a list of circuits. If the intention is to copy a circuit to deal "
+                "with Channel objects directly, use the clone() method instead."
             )
 
         cmap = {}
@@ -545,10 +546,12 @@ class Circuit:
         # Traverse the recursive circuit using a Depth First Search algorithm
         while stack:
             time, circ = stack.pop()
-            # If the circuit is empty, it is a base gate and can be added to the final sequence
+            # If the circuit is empty, it is a base gate and can be
+            # added to the final sequence
             if not circ.circuit:  # Base gate
                 unrolled_circuit_time_sequence[time] += (circ,)
-            # Else it's a composite circuit and is added to the stack with the associated time index
+            # Else it's a composite circuit and is added to the stack
+            # with the associated time index
             else:
                 for i, tick in enumerate(circ.circuit):
                     for sub_circ in reversed(tick):
@@ -607,7 +610,8 @@ class Circuit:
 
                 if len(time_slice1) != len(time_slice2):
                     log.info(
-                        "The two circuits have a different number of gates in a time slice."
+                        "The two circuits have a different number of gates in a "
+                        "time slice."
                     )
                     log.debug(
                         "%s != %s for time slices %s and %s\n",
@@ -644,9 +648,9 @@ class Circuit:
                         return False
 
                     # Check whether the channels are the same.
-                    # This is done by comparing the sets of channel ids of the two circuits
-                    # where for the first circuit, the ids are translated to the ids of the
-                    # second circuit using the channel map
+                    # This is done by comparing the sets of channel ids of the two
+                    # circuits where for the first circuit, the ids are translated to
+                    # the ids of the second circuit using the channel map
                     for ch1, ch2 in zip(gate1.channels, gate2.channels, strict=False):
                         if ch1.id not in channel_map:
                             channel_map[ch1.id] = ch2.id
@@ -805,7 +809,8 @@ class Circuit:
                 for circuit in tick
                 for channel in circuit.channels
             }
-            # Find the channels that are occupied both in the current tick and the previous ticks
+            # Find the channels that are occupied both in the current tick and the
+            # previous ticks
             conflicting_channels = set(occupancy_dictionary.keys()).intersection(
                 set(current_tick_occupancy.keys())
             )
@@ -826,7 +831,8 @@ class Circuit:
 
             # Free channels in the current tick: i.e. channels that are still in use
             # with gates from previous ticks, but are not involved with the current tick
-            # (no conflict). Their duration is being counted down in the occupancy dictionary.
+            # (no conflict). Their duration is being counted down in the occupancy
+            # dictionary.
             free_channels = set(occupancy_dictionary.keys()).difference(
                 set(current_tick_occupancy.keys())
             )

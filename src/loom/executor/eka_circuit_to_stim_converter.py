@@ -365,8 +365,8 @@ class EkaCircuitToStimConverter:
     @property
     def classically_controlled_gate_mapper(self) -> dict[str, str]:
         """
-        A dictionary mapping Circuit classically controlled gates to their corresponding Stim
-        operations.
+        A dictionary mapping Circuit classically controlled gates to their corresponding
+        Stim operations.
         """
         return {
             f"classically_controlled_{pauli.lower()}": f"C{pauli}"
@@ -376,7 +376,8 @@ class EkaCircuitToStimConverter:
     @property
     def two_qubit_gate_mapper(self) -> dict[str, str]:
         """
-        A dictionary mapping Circuit two qubit gates to their corresponding Stim operations.
+        A dictionary mapping Circuit two qubit gates to their corresponding Stim
+        operations.
         """
         return {
             "cx": "CX",
@@ -514,7 +515,7 @@ class EkaCircuitToStimConverter:
             gate_args=gate_args,
         )
 
-    # pylint: disable=too-many-locals, too-many-statements, too-many-branches, too-many-nested-blocks
+    # pylint: disable=too-many-statements, too-many-branches, too-many-nested-blocks, too-many-locals
     def convert(
         self,
         interpreted_eka: InterpretationStep,
@@ -555,7 +556,8 @@ class EkaCircuitToStimConverter:
         for em in error_models:
             if input_eka_circuit != em.circuit:
                 raise ValueError(
-                    "The circuit of one of the error model does not match the input circuit."
+                    "The circuit of one of the error model does not match the input "
+                    "circuit."
                 )
 
         def channels_from_eka_cbits(cbits: tuple[Cbit]) -> list[Channel]:
@@ -586,7 +588,7 @@ class EkaCircuitToStimConverter:
             """
             channels = [
                 channel
-                for meas in eka_meas_object.measurements  # + eka_meas_object.corrections
+                for meas in eka_meas_object.measurements
                 for channel in input_eka_circuit.channels
                 if isinstance(meas, tuple) and channel.label == f"{meas[0]}_{meas[1]}"
                 # ignore constant cbits with the isinstance check
@@ -746,8 +748,9 @@ class EkaCircuitToStimConverter:
                     ]
 
                 # Append the targets to the stim_layer dictionaries
-                # We use tuples (name, hash(param)) as keys because a user could stack several
-                # Similar Noise operations on the same target, with different parameters..
+                # We use tuples (name, hash(param)) as keys because a user could stack
+                # several similar Noise operations on the same target, with different
+                # parameters.
                 # If param is None, it is not an issue since it is hashable.
                 for i, name_and_args_hash in enumerate(stim_op_name_and_args):
                     stim_layers[i][name_and_args_hash] = stim_layers[i].get(
@@ -820,8 +823,8 @@ class EkaCircuitToStimConverter:
                         targets = sorted(
                             [
                                 t
-                                for target in eka_channel_to_stim_qubit_instruction.values()
-                                for t in target.targets_copy()
+                                for tg in eka_channel_to_stim_qubit_instruction.values()
+                                for t in tg.targets_copy()
                             ],
                             key=self._stim_target_sort_key,
                         )

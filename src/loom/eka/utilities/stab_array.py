@@ -49,9 +49,11 @@ class StabArray(PauliArray):
     nqubits : int
         The number of qubits that the PauliArray operators act on.
     x : np.ndarray
-        The array representing the X-component of the PauliArray in binary representation.
+        The array representing the X-component of the PauliArray in binary
+        representation.
     z : np.ndarray
-        The array representing the Z-component of the PauliArray in binary representation.
+        The array representing the Z-component of the PauliArray in binary
+        representation.
     """
 
     array: np.ndarray
@@ -193,8 +195,8 @@ class StabArray(PauliArray):
     @property
     def is_irreducible(self) -> bool:
         """
-        Checks whether the StabArray is irreducible, i.e. if it contains no stabilizers that can
-        be generated as a product of other stabilizers.
+        Checks whether the StabArray is irreducible, i.e. if it contains no stabilizers
+        that can be generated as a product of other stabilizers.
         """
         return reduce_stabarray(self).nstabs == self.nstabs
 
@@ -241,7 +243,8 @@ class StabArray(PauliArray):
 ########################################################################################
 
 
-def find_destabarray(  # pylint: disable=too-many-locals,too-many-branches
+# pylint: disable=too-many-locals
+def find_destabarray(  # pylint: disable=too-many-branches
     stabarr: StabArray, partial_destabarray: StabArray | None = None
 ) -> StabArray:
     """
@@ -698,14 +701,15 @@ def sparse_formatter(stab_list: set[str], **keywords) -> list[dict]:
 
     keywords: {'convert_dict'}
         By supplying a dictionary that converts between qubit indices in CliffordSim
-        into qubit IDs in an embedded QEC code, that user can return dicts where the values
-        refer directly to IDs in an embedded QEC code.
+        into qubit IDs in an embedded QEC code, that user can return dicts where the
+        values refer directly to IDs in an embedded QEC code.
 
     Returns
     -------
     output_format : list[dict]
         Reformats each string in the sparse format.
-        E.g. +ZXIIYXZII gets returned as ``{'sign':'+', 'X':(1,5), 'Z':(0,6), 'Y':(4,)}``
+        E.g. +ZXIIYXZII gets returned as
+        ``{'sign':'+', 'X':(1,5), 'Z':(0,6), 'Y':(4,)}``
     """
 
     output_format = []
@@ -839,7 +843,6 @@ def stabarray_bge_with_bookkeeping(stabarr: StabArray) -> tuple[StabArray, np.nd
     return stabarr_copy, bookkeeping_matrix
 
 
-# pylint: disable=too-many-locals
 def stabarray_standard_form(stabarr: StabArray) -> tuple[StabArray, int, list[int]]:
     """Transform a stabilizer array into a standard form. Note that this means that the
     stabilizer array is reduced and reindexed.
@@ -874,8 +877,8 @@ def stabarray_standard_form(stabarr: StabArray) -> tuple[StabArray, int, list[in
         
     More info:
     
-        Nielsen, M. A., & Chuang, I. L. (2011). (p.470-471) Quantum Computation and Quantum
-        Information: 10th Anniversary Edition. Cambridge University Press
+        Nielsen, M. A., & Chuang, I. L. (2011). (p.470-471) Quantum Computation and 
+        Quantum Information: 10th Anniversary Edition. Cambridge University Press
 
     Parameters
     ----------
@@ -951,8 +954,8 @@ def stabarray_standard_form(stabarr: StabArray) -> tuple[StabArray, int, list[in
         # NOTE: Because arr_to_be_eye is a subarray of the reindexed_stabarr, we may
         # need to offset the indices by r when modifying the reindexed_stabarr
 
-        # if the i-th diagonal element is not 1, then swap the i-th row with a row that has
-        # 1 in the i-th column
+        # if the i-th diagonal element is not 1, then swap the i-th row with a row that
+        # has 1 in the i-th column
         if arr_to_be_eye[i, i] == 0:
             # find a row with 1 in the i-th column and swap it with the i-th row
             row_with_one = np.argmax(arr_to_be_eye[i:, i] == 1) + i

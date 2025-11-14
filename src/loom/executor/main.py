@@ -15,7 +15,7 @@ limitations under the License.
 
 """
 
-# pylint: disable=line-too-long, fixme, invalid-name
+# pylint: disable=line-too-long, invalid-name
 from functools import partial  # , reduce
 
 from loom import cliffordsim
@@ -23,7 +23,6 @@ import loom.cliffordsim.operations as cops
 from ..eka import Circuit, Channel
 
 
-# pylint: disable=too-many-locals
 def convert_circuit_to_cliffordsim(
     input_circuit: Circuit, index_to_channel_map: dict[int, Channel]
 ) -> list[cliffordsim.operations.Operation]:

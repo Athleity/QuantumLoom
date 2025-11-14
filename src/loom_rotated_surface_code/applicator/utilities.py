@@ -15,6 +15,7 @@ limitations under the License.
 
 """
 
+# pylint: disable=too-many-lines
 from __future__ import annotations
 from enum import Enum
 
@@ -96,37 +97,53 @@ def find_schedules(rsc_block: RotatedSurfaceCode) -> tuple[
 ]:
     """
     Determine schedule for stabilizers of the block.
+
     For type 1 and 2 corner configuration (rectangle and U-shape), schedules can be
     inferred from boundary type of the short edge connecting two
     topological corners.
+
     Example::
 
-        (type 1)    1-------4           (type 2)    1-------|
-                    |       |                       |       |
-                    |       |                       |       2
-                    |       |                       |       |
-                    2-------3                       3-------4
+        (type 1)
+        1-------4
+        |       |
+        |       |
+        |       |
+        2-------3
+
+        (type 2)
+        1-------|
+        |       |
+        |       2
+        |       |
+        3-------4
+
 
     For type 3 corner configuration (L-shape), draw a diagonal line through the
     middle-edge topological corner and the geometric corner that is not occupied by
     a topological corner. This line divides the block into two parts, one triangle
     part and one non-triangle part. Return schedules for X and Z-type stabilizers in
     these parts.
+
     Example: the line is drawn through topological corner 2 and geometric corner x::
 
-        (type 3)    1-------x
-                    |       |
-                    2       |
-                    |       |
-                    3-------4
+        (type 3)
+        1-------x
+        |       |
+        2       |
+        |       |
+        3-------4
+
 
     The algorithm is the following:
-    - A) Find the boundary type of the short boundary connecting two topological
+
+    - A.) Find the boundary type of the short boundary connecting two topological
         corners. For type 1, pick any short edge.
-    - B) Find schedules
+    - B.) Find schedules
+
         - B.1) Boundary type is of opposite Pauli type to the logical operator
-        running along the boundary.
-        (e.g. boundary_type = "X" means logical Z running along the boundary)
+            running along the boundary.
+            (e.g. boundary_type = "X" means logical Z running along the boundary)
         - B.2) For type 1 (rectangle) and type 2 (U shape), the opposite short edge
             has the same Pauli type. The schedule of stabilizers with the same Pauli
             type as the short edge is determined so that the propagation of the
@@ -134,11 +151,11 @@ def find_schedules(rsc_block: RotatedSurfaceCode) -> tuple[
             the-opposite-type stabilizers is the opposite schedule of the above
             schedule.
         - B.3) For type 3 (L shape), the opposite short edge has the opposite Pauli
-        type. Inside the triangle, the schedule for stabilizers with the same type
-        as the short edge is determined. Then the schedule for the other type
-        stabilizers inside the triangle is the opposite schedule. Outside the
-        triangle, the schedules are the opposite schedules of the same stabilizer
-        type.
+            type. Inside the triangle, the schedule for stabilizers with the same type
+            as the short edge is determined. Then the schedule for the other type
+            stabilizers inside the triangle is the opposite schedule. Outside the
+            triangle, the schedules are the opposite schedules of the same stabilizer
+            type.
 
     Returns
     -------

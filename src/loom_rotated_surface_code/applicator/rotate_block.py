@@ -42,31 +42,42 @@ def rotate_block(
     original size.
 
     The rotation is performed by:
+
     - A) VALIDITY CHECKS
-        - A.1) Check that the block is a valid RotatedSurfaceCode block for
-                RotateBlock
+
+        - A.1) Check that the block is a valid RotatedSurfaceCode block for RotateBlock
+
     - B) GROW THE BLOCK IN THE SPECIFIED DIRECTION
+
         - B.1) Grow the block to double its size minus one in the specified direction
         - B.2) Measure syndromes to complete the grow operation
         - B.3) Move the logical operators so that they are correctly located on the
                 top-left qubit of the grown block
+
     - C) MOVE THE CORNERS APPROPRIATELY
+
         - C.1) Move each corner individually
         - C.2) Measure syndromes to complete the corner move in a fault-tolerant manner
+
     - D) SHRINK THE BLOCK
+
         - D.1) Shrink the block from the grown side by distance - 2
         - D.2) Shrink the block from the opposite side by 1 to return to original size
+
     - E) MOVE BLOCK
+
         - E.1) Move the block so that it's occupying the same data qubits as initially
         - E.2) Move the logical operators so that they are correctly located on the
                 top-left qubit of the shrunk block
+
     - F) WRAP THE CIRCUIT
+
         - F.1) Isolate the circuit corresponding to the RotateBlock operation and append
                 it as a single Circuit object to the intermediate circuit sequence
 
 
-    Parameters:
-    ------------------
+    Parameters
+    ----------
     interpretation_step : InterpretationStep
         The current interpretation step containing the block to be rotated.
     operation : RotateBlock
@@ -76,8 +87,8 @@ def rotate_block(
     debug_mode: bool
         Flag to apply validation of the new block or not.
 
-    Returns:
-    ------------------
+    Returns
+    -------
     InterpretationStep
         The updated interpretation step after applying the RotateBlock operation.
     """
@@ -217,6 +228,7 @@ def rotate_validity_check(rsc_block: RotatedSurfaceCode):
     """
     Validity checks for applying RotateBlock to a RotatedSurfaceCode block.
     We check that:
+
     - The block is indeed a RotatedSurfaceCode block
     - The block is square and has odd distance
     - The topological and geometric corners match
@@ -245,19 +257,20 @@ def get_boundary_rotation_corner_args_5_1(
     For this to be possible, the block must be of size (d, 2 * d - 1) or (2 * d - 1, d)
     with odd d.
 
-    Parameters:
-    ------------------
+    Parameters
+    ----------
     rsc_block : RotatedSurfaceCode
         The grown rectangular rotated surface code block.
 
-    Returns:
-    ------------------
+    Returns
+    -------
     tuple[tuple[tuple[int, ...], Direction, int], ...]
         A tuple containing 5 tuples, each specifying the arguments for a call to
         move_corners. Each inner tuple contains:
-        - The coordinates of the corner to move (as a tuple of integers).
-        - The direction in which to move the corner (as a Direction enum).
-        - The distance to move the corner (as an integer).
+
+            - The coordinates of the corner to move (as a tuple of integers).
+            - The direction in which to move the corner (as a Direction enum).
+            - The distance to move the corner (as an integer).
     """
     long_orientation = (
         Orientation.HORIZONTAL

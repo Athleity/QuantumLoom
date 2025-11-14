@@ -88,15 +88,13 @@ class DataStore:
         else:
             raise ValueError("The time step of the Moment cannot be None.")
 
-    def record_classical_register(
-        self, input_classical_register: ClassicalRegister
-    ) -> None:
+    def record_classical_register(self, input_classical_reg: ClassicalRegister) -> None:
         """
         Records the Snapshot of the Classical Register into the DataStore.
         """
         if self.time_step is not None:
             cr_snapshot = {
-                input_classical_register.name: input_classical_register.create_snapshot()
+                input_classical_reg.name: input_classical_reg.create_snapshot()
             }
             # Records the state of a classical register at a particular time step.
             if self.time_step not in self.cr_records["time_step"]:
@@ -133,9 +131,9 @@ class DataStore:
                         }
                     }
                 )
-            # if "time_step" already is present, then we open a new dict keyed by "flip_results"
-            # for particular measurement_id. If "measurement_id" has not been previously processed
-            # update with key.
+            # if "time_step" already is present, then we open a new dict keyed by
+            # "flip_results" for particular measurement_id. If "measurement_id" has not
+            # been previously processed update with key.
             elif measurement_id not in self.measurements[str(self.time_step)]:
                 self.measurements[str(self.time_step)].update(
                     {

@@ -200,21 +200,26 @@ def transversalhadamard(
     A) CIRCUIT
         - A.1) Apply Hadamard gates over all data qubits of the block.
         - A.2) Append Hadamard gates to the circuit within the InterpretationStep.
+
     B) STABILIZERS
         - B.1) Update Stabilizers (XX -> ZZ, ZZ -> XX, for 2-body stabilizers) with new UUIDs.
         - B.2) Record the old UUIDs and the new UUIDs of the Stabilizers. (stabilizer_evolution)
+
     C) PAULIOPERATORS
         - C.1) Update PauliOperators (X to Z Operators) with new UUIDs
                and logical updates.
         - C.2) Update PauliOperators (Z to X Operators) with new UUIDs
                and logical updates.
+
     D) SYNDROMECIRCUITS
         - D.1) Update Syndrome Circuits with new UUIDs.
         - D.2) Determine the Syndrome Circuit(s) associated with the old Stabilizer(s).
         - D.3) Update the Syndrome Circuit(s) for the new Stabilizer(s).
         - D.4) Update Collection of New Syndrome Circuits and New Stabilizer to Circuit Mapping
+
     E) NEW BLOCK
         - E.1) Create new Block (Same unique_label as Input Block)
+
     G) BLOCK HISTORY
         - G.1) Update the latest Block Configuration in InterpretationStep.
 

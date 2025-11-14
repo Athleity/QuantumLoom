@@ -37,7 +37,7 @@ class Invoker:
         pauli_frames_backward: List[PauliFrame],
         data_store: DataStore,
         registry: Dict,
-    ):  # pylint: disable=too-many-arguments, too-many-positional-arguments
+    ):
         self.input_tableau = input_tableau
         self.pauli_frames_forward = pauli_frames_forward
         self.pauli_frames_backward = pauli_frames_backward
@@ -48,7 +48,8 @@ class Invoker:
         """
         Transform the input_tableau according to the input moment.
         The data_store and registry are also passed to the moment's transform_tab
-        method to record any potential output measurement and allow for classical control.
+        method to record any potential output measurement and allow for classical
+        control.
         """
         try:
             self.data_store.set_time_step(input_moment.time_step)
@@ -78,8 +79,8 @@ class Invoker:
     def transform_pf_back(self, input_moment: Moment) -> bool:
         """
         Transform the pauli frames backwards according to the input moment.
-        The data_store is also passed to the moment's transform_pf_back method to record any
-        potential output pauli frame state.
+        The data_store is also passed to the moment's transform_pf_back method to
+        record any potential output pauli frame state.
         """
         try:
             self.data_store.set_time_step(input_moment.time_step)

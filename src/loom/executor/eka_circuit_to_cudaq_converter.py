@@ -40,7 +40,8 @@ class Converter(ABC):
     Abstract base class for converting EKA circuits to a specific format.
     This class defines the required quantum operations and provides a method to
     validate that the converter supports all the required operations.
-    Subclasses must implement the abstract methods to provide the actual conversion logic.
+    Subclasses must implement the abstract methods to provide the actual conversion
+    logic.
 
     Properties
     ----------
@@ -55,12 +56,14 @@ class Converter(ABC):
     q_op_misc : dict
         Miscellaneous quantum operations that do not fit into the other categories.
     quantum_operations_map : dict
-        Unified operations map from all categories, excluding classically controlled operations.
+        Unified operations map from all categories, excluding classically controlled
+        operations.
     classically_controlled_operations : dict
         Combined classically controlled operations from both single and two qubit gates.
     operations_map : dict
         A unified operations map from all categories, combining single qubit gates,
-        two qubit gates, reset operations, measurement operations, and miscellaneous operations.
+        two qubit gates, reset operations, measurement operations, and miscellaneous
+        operations.
 
     Raises
     ------
@@ -113,7 +116,9 @@ class Converter(ABC):
     @property
     @abstractmethod
     def q_op_misc(self) -> dict[str, Callable]:
-        """Miscellaneous quantum operations that do not fit into the other categories."""
+        """
+        Miscellaneous quantum operations that do not fit into the other categories.
+        """
 
     @property
     def quantum_operations_map(self) -> dict[str, Callable]:
@@ -515,7 +520,8 @@ class EkaToCudaqConverter(Converter):
             The parity of the outcomes for each shot of the simulation output.
         """
 
-        def get_outcomes(cbit: Cbit, simulation_output: SampleResult) -> list[int]:  # type: ignore
+        # type: ignore
+        def get_outcomes(cbit: Cbit, simulation_output: SampleResult) -> list[int]:
             """Get the outcome of a measurement from the simulation output.
             If the measurement is not present in the output, return None."""
 

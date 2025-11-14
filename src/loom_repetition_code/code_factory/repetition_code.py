@@ -18,7 +18,6 @@ limitations under the License.
 # pylint: disable=duplicate-code
 from __future__ import annotations
 from uuid import uuid4
-from functools import cached_property
 from pydantic.dataclasses import dataclass
 
 from loom.eka import (
@@ -47,7 +46,7 @@ class RepetitionCode(Block):
         check_type: str,
         lattice: Lattice,
         unique_label: str | None = None,
-        position: tuple[int] = (0,),
+        position: tuple[int, ...] = (0,),
         logical_x_operator: PauliOperator | None = None,
         logical_z_operator: PauliOperator | None = None,
         skip_validation: bool = False,
@@ -68,7 +67,7 @@ class RepetitionCode(Block):
             Label for the block. It must be unique among all blocks in the initial CRD.
             If no label is provided, a unique label is generated automatically using the
             uuid module.
-        position : tuple[int, ], optional
+        position : tuple[int, ...], optional
             Position of the top left corner of the block on the lattice, by
             default (0,).
         logical_x_operator: PauliOperator | None, optional
@@ -297,7 +296,3 @@ class RepetitionCode(Block):
 
     def rename(self, name: str) -> RepetitionCode:
         return super().rename(name)
-
-    @cached_property
-    def stabilizers_labels(self) -> dict[str, dict[str, tuple[int, ...]]]:
-        return super().stabilizers_labels

@@ -25,7 +25,9 @@ class PropagationError(BaseException):
 
 
 class InvalidTableauError(BaseException):
-    """An Error has occured when trying to validate the current Tableau during runtime."""
+    """
+    An Error has occurred when trying to validate the current Tableau during runtime.
+    """
 
 
 class TableauSizeError(BaseException):

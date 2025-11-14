@@ -45,7 +45,7 @@ class Engine:  # pylint: disable=too-many-instance-attributes
         seed: int = None,
         shots: int = 1,
         parallelize: bool = False,
-    ):  # pylint: disable=too-many-arguments, too-many-positional-arguments
+    ):
         self.input_operations = input_operations
         self._validate_operations(input_operations, nqubits)
         self.moment_queue = MomentQueue(input_operations, parallelize)
@@ -64,7 +64,8 @@ class Engine:  # pylint: disable=too-many-instance-attributes
         for operation in input_operations:
             if not isinstance(operation, Operation):
                 raise TypeError(
-                    "Input operations must be of type Operation or a subclass of Operation."
+                    "Input operations must be of type Operation or a subclass of "
+                    "Operation."
                 )
             if isinstance(operation, CreatePauliFrame):
                 created_pfs.append(operation.pauli_frame)
@@ -75,7 +76,8 @@ class Engine:  # pylint: disable=too-many-instance-attributes
         for pauli_frame in recorded_pfs:
             if pauli_frame not in created_pfs:
                 raise ValueError(
-                    "RecordPauliFrame operations must be preceded by a CreatePauliFrame operation."
+                    "RecordPauliFrame operations must be preceded by a "
+                    "CreatePauliFrame operation."
                 )
 
         # Check that all created PF have a unique id
@@ -98,11 +100,12 @@ class Engine:  # pylint: disable=too-many-instance-attributes
             if isinstance(input_operation, CreatePauliFrame):
                 if len(input_operation.pauli_frame.x) != compare_nqubits:
                     raise ValueError(
-                        f"Wrong size for the PauliFrame {input_operation.pauli_frame.id}. "
-                        f"It has size {len(input_operation.pauli_frame.x)}. It must have "
-                        f"the same length as the number of qubits in the system "
+                        f"Wrong size for the PauliFrame "
+                        f"{input_operation.pauli_frame.id}. It has size "
+                        f"{len(input_operation.pauli_frame.x)}. It must have "
+                        "the same length as the number of qubits in the system "
                         f"({compare_nqubits}). Make sure that you take into "
-                        f"account resize operations."
+                        "account resize operations."
                     )
 
     def _setup_clifford_simulator(self):

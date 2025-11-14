@@ -27,7 +27,6 @@ from . import matrices  # pylint: disable=cyclic-import
 from .stabilizer import Stabilizer
 
 
-# pylint: disable=too-many-locals
 def cartesian_product_tanner_graphs(
     t_graph_1: ClassicalTannerGraph, t_graph_2: ClassicalTannerGraph
 ) -> TannerGraph:
@@ -68,7 +67,8 @@ def cartesian_product_tanner_graphs(
     Returns
     -------
     tanner_product: TannerGraph
-       Tanner graph from cartesian product of t_graph_1 and t_graph_2, describing the full HGP code.
+        Tanner graph from cartesian product of t_graph_1 and t_graph_2, describing the
+        full HGP code.
     """
 
     # Check inputs are of valid type
@@ -463,8 +463,8 @@ class ClassicalTannerGraph:
 
     def relabelled_graph(self) -> ClassicalTannerGraph:
         """Relabel a Classical Tanner graph to identify nodes with tuples of
-        integers which can later be converted into Stabilizers. The nodes are a
-        assigned a single-element tuple with an integer index. The data nodes are counted
+        integers which can later be converted into Stabilizers. The nodes are a assigned
+        a single-element tuple with an integer index. The data nodes are counted
         first, followed by the check nodes. The old node labels are stored in the node
         attributes under the key 'original_node'.
 
@@ -980,7 +980,8 @@ class TannerGraph:
 
         Returns
         -------
-        t_graph_x, t_graph_z: tuple[ClassicalTannerGraph | None, ClassicalTannerGraph | None]
+        t_graph_x, t_graph_z: tuple[ClassicalTannerGraph | None,
+        ClassicalTannerGraph | None]
             Tuple containing the X and Z tanner graphs induced by the data nodes and the
             respective set of check nodes.
         """

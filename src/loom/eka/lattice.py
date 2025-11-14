@@ -610,9 +610,8 @@ class Lattice:
         lattice_vectors = [[0, cell_dist], [cell_dist, 0]]
         return cls(basis_vectors, lattice_vectors, lattice_size, lattice_type)
 
-    # pylint: disable=too-many-arguments, too-many-positional-arguments
     @classmethod
-    def poly_2d(
+    def poly_2d(  # pylint:disable=too-many-arguments, too-many-positional-arguments
         cls,
         lattice_size: tuple[int, int] | None = None,
         n: int | None = None,

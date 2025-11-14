@@ -156,8 +156,8 @@ class ClassicalRegister:
         ClassicalRegister, that contains important properties of the
         ClassicalRegister.
 
-        The ClassicalRegisterSnapshot object can then be used to restore the state of the
-        ClassicalRegister at the time the snapshot was created.
+        The ClassicalRegisterSnapshot object can then be used to restore the state of
+        the ClassicalRegister at the time the snapshot was created.
         """
         return ClassicalRegisterSnapshot(
             name=deepcopy(self.name),

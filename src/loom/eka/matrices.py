@@ -42,8 +42,8 @@ class ClassicalParityCheckMatrix:
         matrix, where each row describes a classical check and each column a
         classical bit.
 
-        The object can be instantiated from a numpy array, a list of lists, or a tuple of
-        Stabilizers. For an array-like input, the matrix is verified to be valid and
+        The object can be instantiated from a numpy array, a list of lists, or a tuple
+        of Stabilizers. For an array-like input, the matrix is verified to be valid and
         cleaned afterwards. We adopt the convention of removing repeated rows and empty
         rows. For a Stabilizers input, we require all of them to be of the same pauli
         type, i.e. either X or Z. The support of the matrix rows is then built from the
@@ -58,7 +58,8 @@ class ClassicalParityCheckMatrix:
 
         Parameters
         ----------
-        input : np.ndarray | list[list[int]] | tuple[Stabilizer,...] | ClassicalTannerGraph
+        input : np.ndarray | list[list[int]] | tuple[Stabilizer,...] |
+        ClassicalTannerGraph
             Input to instantiate the ClassicalParityCheckMatrix object.
         """
 
@@ -226,25 +227,18 @@ class ClassicalParityCheckMatrix:
             Parity-check matrix generated from the Tanner graph.
         """
 
-        # Extract the graph nodes
-        data_nodes = {
-            n
-            for n, attr in tanner_graph.graph.nodes(data=True)
-            if attr["label"] == "data"
-        }
-        check_nodes = {
-            n
-            for n, attr in tanner_graph.graph.nodes(data=True)
-            if attr["label"] != "data"
-        }
-
         # Initialize parity-check matrix
-        h_matrix = np.zeros((len(check_nodes), len(data_nodes)), dtype=int)
+        h_matrix = np.zeros(
+            (len(tanner_graph.check_nodes), len(tanner_graph.data_nodes)), dtype=int
+        )
+
+        # Map data nodes to column indices
+        data_to_ind = {d: i for i, d in enumerate(sorted(tanner_graph.data_nodes))}
 
         # Fill in with checks
-        for i, check_node in enumerate(check_nodes):
+        for i, check_node in enumerate(sorted(tanner_graph.check_nodes)):
             for data_node in tanner_graph.graph.neighbors(check_node):
-                h_matrix[i, data_node] = 1
+                h_matrix[i, data_to_ind[data_node]] = 1
 
         return h_matrix
 
@@ -556,8 +550,8 @@ class ParityCheckMatrix:
 
         valid_css = True
 
-        # For CSS, the support of every row should be non-vanishing only on one side of the
-        # matrix, i.e. either X or Z stabilizers.
+        # For CSS, the support of every row should be non-vanishing only on one side of
+        # the matrix, i.e. either X or Z stabilizers.
         for row in self.matrix:
             if np.any(row[: self.n_datas]) and np.any(row[self.n_datas :]):
                 valid_css = False
@@ -582,9 +576,9 @@ class ParityCheckMatrix:
         # Check if matrix has already been verified as non CSS
         if not self.is_css:
             raise ValueError(
-                "Parity-check matrix cannot be split into hx_matrix and hz_matrix as there are"
-                " stabilizers with mixed X and Z support, thus it does not define"
-                " a CSS code."
+                "Parity-check matrix cannot be split into hx_matrix and hz_matrix as "
+                "there are stabilizers with mixed X and Z support, thus it does not "
+                "define a CSS code."
             )
 
         # Extract the X and Z components of the parity-check matrix

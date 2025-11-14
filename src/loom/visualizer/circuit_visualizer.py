@@ -26,7 +26,6 @@ from loom.eka import Circuit
 from .plotting_utils import convert_circuit_to_nx_graph
 
 
-# pylint: disable=too-many-locals
 def hierarchy_layout(graph, root=None, x_spacing=1.0, y_spacing=1.5):
     """
     Pure-Python replacement for graphviz_layout (hierarchical layout).
@@ -78,7 +77,8 @@ def hierarchy_layout(graph, root=None, x_spacing=1.0, y_spacing=1.5):
     return pos
 
 
-def plot_circuit_tree(  # pylint: disable=too-many-locals
+# pylint: disable=too-many-locals
+def plot_circuit_tree(
     circuit: Circuit,
     max_layer: int | None = None,
     layer_colors: list[str] | None = None,
