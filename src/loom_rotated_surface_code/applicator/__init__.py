@@ -20,8 +20,8 @@ from .grow import grow
 from .logical_phase_via_ywall import logical_phase_via_ywall
 from .merge import merge
 
-# from .move_block import move_block
 from .move_corners import move_corners
+from .move_block import move_block
 from .rsc_applicator import RotatedSurfaceCodeApplicator
 from .shrink import shrink
 from .split import split

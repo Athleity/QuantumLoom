@@ -20,13 +20,21 @@ from types import MappingProxyType
 from functools import partial
 from math import pi
 
-import pennylane as qml
-from catalyst import measure, cond
-from jax import Array
+# pylint: disable=import-error, wrong-import-position, possibly-used-before-assignment
+import importlib.util
+
+if importlib.util.find_spec("pennylane"):
+    import pennylane as qml
+
+if importlib.util.find_spec("catalyst"):
+    from catalyst import measure, cond
+
+if importlib.util.find_spec("jax"):
+    from jax import Array
 
 from ..eka import Circuit
 
-# pylint: disable=unnecessary-lambda-assignment, comparison-with-callable
+# pylint: disable=unnecessary-lambda-assignment, comparison-with-callable, invalid-name
 
 # Define the mapping between EKA operations and PennyLane operations as MappingProxyType
 # to ensure that the mapping is immutable

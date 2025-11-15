@@ -2054,7 +2054,8 @@ class RecordClassicalRegisterDecorator(InstructionDecorator):
         data_store: DataStore,
         **kwargs,
     ):
-        # Record the current state of classical register named reg_name into the DataStore.
+        # Record the current state of classical register named reg_name into the
+        # DataStore.
         data_store.record_classical_register(kwargs["registry"][self.reg_name])
 
         return input_tableau, data_store, kwargs

@@ -191,9 +191,9 @@ def point_in_polygon(
         # Check if the x coordinate of the point is to the left of the point on the edge
         # which has the same y coordinate as the given point
         if abs(next_corner[1] - corner[1]) > 1e-9:  # Avoid division by zero
-            inverse_slope = (next_corner[0] - corner[0]) / (
-                next_corner[1] - corner[1]
-            )  # Inverse slope of line going from (x1, y1) to (x2, y2) is (x2 - x1) / (y2 - y1)
+            inverse_slope = (next_corner[0] - corner[0]) / (next_corner[1] - corner[1])
+            # Inverse slope of line going from (x1, y1) to (x2, y2) is
+            # (x2 - x1) / (y2 - y1)
 
             point_is_left_of_edge = x < corner[0] + inverse_slope * (y - corner[1])
 
@@ -258,7 +258,8 @@ def interpolate_values(
     # Make sure the number of interpolation points and interpolation values is the same
     if len(interpolation_points) != len(interpolation_values):
         raise ValueError(
-            "The number of interpolation points and interpolation values must be the same."
+            "The number of interpolation points and interpolation values must be the "
+            "same."
         )
 
     # Make sure every element of interpolation_values is a list.
@@ -333,9 +334,9 @@ def order_points_counterclockwise(
     Parameters
     ----------
     points : list[tuple[float, float, list[any]]]
-        List of points to be ordered. Every element in the list is a tuple which contains
-        the x and y coordinate of the point as the first two elements. The third element
-        is a list which can store additional metadata.
+        List of points to be ordered. Every element in the list is a tuple which
+        contains the x and y coordinate of the point as the first two elements. The
+        third element is a list which can store additional metadata.
 
     Returns
     -------
@@ -457,9 +458,9 @@ def get_label_for_circuit(circ: Circuit) -> str:
 
 def convert_circuit_to_nx_graph(circ: Circuit) -> tuple[nx.DiGraph, list[str]]:
     """
-    Construct a NetworkX directed graph (DiGraph) from a circuit. The nodes of the graph are all the
-    subcircuits contained in the circuit object. The edges are directed from every
-    circuit to its subcircuits.
+    Construct a NetworkX directed graph (DiGraph) from a circuit. The nodes of the graph
+    are all the subcircuits contained in the circuit object. The edges are directed from
+    every circuit to its subcircuits.
 
     Parameters
     ----------

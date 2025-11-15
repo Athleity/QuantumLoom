@@ -15,7 +15,8 @@ limitations under the License.
 
 """
 
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, duplicate-code
+
 
 from __future__ import annotations
 from uuid import uuid4

@@ -29,7 +29,7 @@ from ..interpretation_step import InterpretationStep
 from ..logical_observable import LogicalObservable
 
 
-def measurelogicalpauli(  # pylint: disable=too-many-locals
+def measurelogicalpauli(
     interpretation_step: InterpretationStep,
     operation: MeasureLogicalX | MeasureLogicalY | MeasureLogicalZ,
     same_timeslice: bool,
@@ -138,7 +138,8 @@ def measurelogicalpauli(  # pylint: disable=too-many-locals
     # Create Detectors for the new syndromes
     new_detectors = generate_detectors(interpretation_step, new_syndromes)
 
-    # 3 - Create the logical observable including measured data qubits and all previous corrections
+    # 3 - Create the logical observable including measured
+    # data qubits and all previous corrections
 
     if basis == "X":
         logical_qubit = block.logical_x_operators[logical_qubit_index]

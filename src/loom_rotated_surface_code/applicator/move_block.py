@@ -50,14 +50,20 @@ def move_block(
     right in the second round.
 
     The algorithm is as follows:
-    - A) VALID MOVE CHECK
+
+    - A.) VALID MOVE CHECK
+
         - A.1) Check if the qubits required for the block to be moved are available.
-    - B) SHIFT THE BLOCK
+
+    - B.) SHIFT THE BLOCK
+
         - B.1) Shift the block in the specified direction
         - B.2) Update the block history and evolution
         - B.3) Update all the evolutions
         - B.4) Propagate all the updates
-    - C) CIRCUIT GENERATION
+
+    - C.) CIRCUIT GENERATION
+
         - C.1) Find the qubit initializations required for the swap-then-qec operation
               and create the reset circuit
         - C.2) Find the stabilizer schedules for the new block and generate the cnot
@@ -66,55 +72,69 @@ def move_block(
               to stabilizers and logical operators
         - C.4) Final measurement of the stabilizers and generation of syndromes
         - C.5) Combine all the circuits into one diagonal move circuit
+
     - Repeat steps A, B, C for the second diagonal direction.
-    - D) FINAL CIRCUIT
+    - D.) FINAL CIRCUIT
+
         - D.1) Combine the two diagonal move circuits into one circuit and append to the
                 interpretation step.
 
     If the block is moved to the top:
+
     The syndrome extraction circuits assign the qubits as follows:
-    1. The first set of syndrome extraction rounds assigns the qubits as follows:
+
+    1. The first set of syndrome extraction rounds assigns the qubits as follows::
+
+                    a
+            x --- x --- x
+         a  |  a  |  a  |
+            x --- x --- x
+            |  a  |  a  |  a
+            x --- x --- x
                 a
-        x --- x --- x
-     a  |  a  |  a  |
-        x --- x --- x
-        |  a  |  a  |  a
-        x --- x --- x
-            a
-    where x are data channels and a are ancilla channels.
+
+
+        where x are data channels and a are ancilla channels.
+
     2. The second set of syndrome extraction rounds creates a new set of channels
     BASED on how the channels are first created, in most cases as ancilla qubits of
     either the teleport circuits or that of the syndrome extraction rounds during the
     move.
-    As such the new set of qubits are assigned as follows:
-        a     a     a
-           x --- x --- x
-        a  |  a  |  a  |
-           x --- x --- x
-        a  |  a  |  a  |  a
-           x --- x --- x
-               a
 
-    2b. Following step:
-           x     x     x
-        a --- a --- a
-     x  |  x  |  x  |  x
-        a --- a --- a
-        |  x  |  x  |  x
-        a --- a --- a     a
-           x     x     x
-              a
+    As such the new set of qubits are assigned as follows::
 
-    2c. Final Expected Configuration:
-                    a
-           x --- x --- x
-        a  |  a  |  a  |
-     a     x --- x --- x
-        a  |  a  |  a  |  a
-           x --- x --- x
-        a     a     a     a
-           x     x     x
-              a
+            a     a     a
+               x --- x --- x
+            a  |  a  |  a  |
+               x --- x --- x
+            a  |  a  |  a  |  a
+               x --- x --- x
+                  a
+
+
+    2b. Following step::
+
+               x     x     x
+            a --- a --- a
+         x  |  x  |  x  |  x
+            a --- a --- a
+            |  x  |  x  |  x
+            a --- a --- a     a
+               x     x     x
+                  a
+
+
+    2c. Final Expected Configuration::
+
+                        a
+               x --- x --- x
+            a  |  a  |  a  |
+         a     x --- x --- x
+            a  |  a  |  a  |  a
+               x --- x --- x
+            a     a     a     a
+               x     x     x
+                  a
 
     Parameters
     ----------
@@ -421,51 +441,58 @@ def find_swap_then_qec_qubit_initializations(  # pylint: disable=too-many-locals
     Find the qubits to initialize for the swap_then_qec operation in the y_wall_out
     operation context. This is for a subset of stabilizers of the block that are
     associated with the boundary qubits.
+
     The recipe is as follows for moving towards TOP-RIGHT:
-    1) FIND (non-teleporting) ANCILLA QUBIT INITIALIZATIONS:
+
+    - 1) FIND (non-teleporting) ANCILLA QUBIT INITIALIZATIONS:
+
         For each stabilizer that is NOT a the TOP-RIGHT boundary stabilizer,
         find the ancilla qubit on the TOP-RIGHT of the initial ancilla qubit
         and initialize it in the basis corresponding to the stabilizer.
-    2) FIND TELEPORTATION QUBIT PAIRS:
+
+    - 2) FIND TELEPORTATION QUBIT PAIRS:
+
         For each stabilizer that is NOT a BOTTOM-LEFT boundary stabilizer,
         check if the ancilla qubit of the stabilizer is already initialized. If not,
         initialize it in the basis corresponding to the stabilizer and form a
         teleportation qubit pair with the data qubit on the BOTTOM-LEFT of the ancilla.
-    3) FIND DATA QUBIT INITIALIZATIONS:
+
+    - 3) FIND DATA QUBIT INITIALIZATIONS:
+
         For each stabilizer that is a TOP-RIGHT boundary stabilizer, find the data qubit
         on the TOP-RIGHT of the ancilla qubit and initialize it in the basis
         corresponding to the stabilizer.
 
-    Say we have the following block annotated by its stabilizers:
+    Say we have the following block annotated by its stabilizers::
 
-                 Z
-        o --- o --- o
-     X  |  Z  |  X  |
-        o --- o --- o
-        |  X  |  Z  |  X
-        o --- o --- o
-           Z
+                     Z
+            o --- o --- o
+         X  |  Z  |  X  |
+            o --- o --- o
+            |  X  |  Z  |  X
+            o --- o --- o
+               Z
 
     To perform SWAP-THEN-QEC to move the block diagonally towards the TOP-RIGHT, we
     need to initialize the qubits  in the basis as shown below::
 
-                --- z
-           x  |  z  |
-        o --- o --- o
-        |  z  |  x  |  z
-        o --- o --- o --- x
-        |  x  |  z  |  x
-        o --- o --- o
+                    --- z
+               x  |  z  |
+            o --- o --- o
+            |  z  |  x  |  z
+            o --- o --- o --- x
+            |  x  |  z  |  x
+            o --- o --- o
 
     Of these, the teleportation qubit pairs can be seen with the numberings below::
 
-                --- z
-           x  |  z  |
-        o --- o --- o
-        |  1  |  x  |  z
-        1 --- o --- o --- x
-        |  2  |  z  |  3
-        2 --- o --- 3
+                    --- z
+               x  |  z  |
+            o --- o --- o
+            |  1  |  x  |  z
+            1 --- o --- o --- x
+            |  2  |  z  |  3
+            2 --- o --- 3
 
 
     Parameters

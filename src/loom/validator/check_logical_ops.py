@@ -126,7 +126,6 @@ class LogicalOperatorCheck(AbstractValidityCheck):
         return ""
 
 
-# pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-locals
 def check_logical_operators_transformation(
     base_cliffordsim_operations: tuple[Operation, ...],
     input_block: Block,

@@ -29,7 +29,7 @@ logging.basicConfig(format="%(name)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
 
 
-def measureblocksyndromes(  # pylint: disable=too-many-locals
+def measureblocksyndromes(
     interpretation_step: InterpretationStep,
     operation: MeasureBlockSyndromes,
     same_timeslice: bool,
@@ -72,7 +72,8 @@ def measureblocksyndromes(  # pylint: disable=too-many-locals
     Parameters
     ----------
     interpretation_step : InterpretationStep
-        Interpretation step containing the block from which the syndrome should be measured.
+        Interpretation step containing the block from which the 
+        syndrome should be measured.
     operation : MeasureBlockSyndromes
         Syndrome measurement operation description.
     same_timeslice : bool
@@ -130,9 +131,10 @@ def measureblocksyndromes(  # pylint: disable=too-many-locals
     ]  # Maybe test for empty lists ???
 
     # Repeat for n_cycle:
-    # TODO: Use cycle to create the cbits? pylint: disable=fixme
+    # TODO: Use cycle to create the cbits?
     for _ in range(operation.n_cycles):
-        #   B.3) - Find the classical channels (create them if they don't exist) and create cbits
+        #   B.3) - Find the classical channels (create them if they don't exist)
+        #   and create cbits
         cbit_channels, measurements = [], []
         for each_cbit_label in cbit_labels:
             cbit = interpretation_step.get_new_cbit_MUT("c_" + each_cbit_label[0])

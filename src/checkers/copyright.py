@@ -51,7 +51,7 @@ class CopyrightChecker(BaseRawFileChecker):
             },
         ),
     )
-
+    # pylint:disable=line-too-long
     copyright_msg = [
         b'"""\n',
         b"Copyright 2024 Entropica Labs Pte Ltd\n",

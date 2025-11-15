@@ -70,7 +70,8 @@ def shrink_consistency_checks(
     return block
 
 
-def shrink(  # pylint: disable=too-many-statements, too-many-locals, line-too-long
+# pylint: disable=too-many-statements, too-many-locals, too-many-branches
+def shrink(
     interpretation_step: InterpretationStep,
     operation: Shrink,
     same_timeslice: bool,
@@ -202,7 +203,10 @@ def shrink(  # pylint: disable=too-many-statements, too-many-locals, line-too-lo
         shrink_circuit_list = basis_change_circuit_seq + measure_circuit_seq
     # Construct the final circuit and append it to InterpretationStep.circuit
     shrink_circuit = Circuit(
-        name=f"Shrink {block.unique_label} by {operation.length} from {operation.direction}",
+        name=(
+            f"Shrink {block.unique_label} by {operation.length} "
+            f"from {operation.direction}"
+        ),
         circuit=shrink_circuit_list,
     )
     interpretation_step.append_circuit_MUT(shrink_circuit, same_timeslice)

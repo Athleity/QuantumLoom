@@ -54,8 +54,8 @@ class InterpretationStep:  # pylint: disable=too-many-instance-attributes
     The `InterpretationStep` class stores all relevant information which was
     generated during interpretation up to the `Operation` which is currently
     interpreted. In every interpretation step, the old `InterpretationStep` instance is
-    replaced with an updated instance. After all `Operation`\\s have been interpreted, the
-    last `InterpretationStep` instance contains the final output.
+    replaced with an updated instance. After all `Operation`\\s have been interpreted,
+    the last `InterpretationStep` instance contains the final output.
 
     NOTE on mutability: During the interpretation of an EKA, there is a lot of data
     generated and modified which is stored inside the `InterpretationStep` objects.
@@ -75,8 +75,8 @@ class InterpretationStep:  # pylint: disable=too-many-instance-attributes
     Parameters
     ----------
     intermediate_circuit_sequence : tuple[tuple[Circuit, ...], ...]
-        The circuit implementing all `Operation` s which have been interpreted until now.
-        It consists of a tuple of timeslices, where each timeslice is a tuple of
+        The circuit implementing all `Operation` s which have been interpreted until
+        now. It consists of a tuple of timeslices, where each timeslice is a tuple of
         `Circuit` objects. They can be composite circuits. At the final step, this is
         used to generate final_circuit.
     final_circuit : Circuit | None
@@ -99,31 +99,33 @@ class InterpretationStep:  # pylint: disable=too-many-instance-attributes
         A tuple of `LogicalObservable` s which were measured until now.
     stabilizer_evolution : dict[str, tuple[str, ...]]
         Keeps track of which stabilizers transformed into which other stabilizers due to
-        operations such as shrink or split. The dictionary is a FINAL-to-INITIAL mapping.
-        In most cases both key and value will be a single string and there is a 1:1
-        mapping from an old stabilizer to a new stabilizer. If there is a case where
+        operations such as shrink or split. The dictionary is a FINAL-to-INITIAL
+        mapping. In most cases both key and value will be a single string and there is a
+        1:1 mapping from an old stabilizer to a new stabilizer. If there is a case where
         multiple stabilizers are combined into a single stabilizer, the value will be a
         tuple of strings. Conversely, if a single stabilizer is split into multiple
         stabilizers, two keys would be associated with the same value.
-        E.g. for a split we match `new_stab1.uuid` to `(old_stab.uuid,)` and `new_stab2.uuid` to
-        `(old_stab.uuid,)`. For a situation where we merge two stabilizers, we match
-        `merged_stab.uuid` to `(old_stab1.uuid, old_stab.uuid)` .
+        E.g. for a split we match `new_stab1.uuid` to `(old_stab.uuid,)` and
+        `new_stab2.uuid` to `(old_stab.uuid,)`. For a situation where we merge two
+        stabilizers, we match `merged_stab.uuid` to `(old_stab1.uuid, old_stab.uuid)` .
     logical_x_evolution : dict[str, tuple[str, ...]]
         Keeps track of which logical X operator(s) transformed into which other logical
         X operator(s) due to operations such as shrink or split and eventual
         stabilizer(s) required to go from one to the next. The dictionary is a
         FINAL-to-INITIAL mapping.
-        E.g. for a split we match `split_x_op1.uuid` to `(old_x_op.uuid,)` and `split_x_op2.uuid`
-        to `(old_x_op.uuid,)`. For a shrink that moved the X operator using adjacent stabilizers,
-        we match `new_x_op.uuid` to `(old_x_op.uuid, stab1.uuid, stab2.uuid)`.
+        E.g. for a split we match `split_x_op1.uuid` to `(old_x_op.uuid,)` and
+        `split_x_op2.uuid` to `(old_x_op.uuid,)`. For a shrink that moved the X operator
+        using adjacent stabilizers, we match `new_x_op.uuid` to
+        `(old_x_op.uuid, stab1.uuid, stab2.uuid)`.
     logical_z_evolution : dict[str, tuple[str, ...]]
         Keeps track of which logical Z operator(s) transformed into which other logical
         Z operator(s) due to operations such as shrink or split and eventual
         stabilizer(s) required to go from one to the next. The dictionary is a
         FINAL-to-INITIAL mapping.
-        E.g. for a split we match `split_z_op1.uuid` to `(old_z_op.uuid,)` and `split_z_op2.uuid`
-        to `(old_z_op.uuid,)`. For a shrink that moved the Z operator using adjacent stabilizers,
-        we match `new_z_op.uuid` to `(old_z_op.uuid, stab1.uuid, stab2.uuid)`.
+        E.g. for a split we match `split_z_op1.uuid` to `(old_z_op.uuid,)` and
+        `split_z_op2.uuid` to `(old_z_op.uuid,)`. For a shrink that moved the Z operator
+        using adjacent stabilizers, we match `new_z_op.uuid` to
+        `(old_z_op.uuid, stab1.uuid, stab2.uuid)`.
     block_evolution : dict[str, tuple[str, ...]]
         Keeps track of which block(s) transformed into which other block(s) due to
         operations such as merge and split. If there is a 1:1 mapping between and old
@@ -360,7 +362,8 @@ class InterpretationStep:  # pylint: disable=too-many-instance-attributes
             in the new updates. If False, only the new updates are added.
         """
 
-        # Separate cases for X and Z operators because they are located in different dictionaries
+        # Separate cases for X and Z operators because
+        # they are located in different dictionaries
         if operator_type == "X":
             logical_evolution = self.logical_x_evolution
             logical_updates = self.logical_x_operator_updates

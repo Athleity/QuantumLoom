@@ -91,8 +91,8 @@ class MomentQueue:
             if isinstance(first_op, GateOperation):
                 pop_index = []
                 for op_index, next_op in enumerate(input_operations):
-                    # Measurement, Resize and DataManipulation Operations are hard walls that
-                    # prevent other Operations from being performed
+                    # Measurement, Resize and DataManipulation Operations are hard walls
+                    # that prevent other Operations from being performed
                     if isinstance(
                         next_op,
                         (

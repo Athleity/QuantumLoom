@@ -115,7 +115,7 @@ class StabilizerMeasurementCheck(AbstractValidityCheck):
                 )
 
 
-# pylint: disable=too-many-locals, too-many-branches, line-too-long, anomalous-backslash-in-string
+# pylint: disable=too-many-branches, line-too-long, anomalous-backslash-in-string
 def check_input_stabilizer_measurement(
     base_cliffordsim_operations: tuple[Operation, ...],
     input_block: Block,

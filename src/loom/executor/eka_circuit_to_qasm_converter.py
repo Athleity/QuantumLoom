@@ -21,7 +21,7 @@ from functools import reduce
 from ..eka import Circuit, Channel, ChannelType
 
 
-# pylint: disable=too-many-locals, too-many-statements
+# pylint: disable=too-many-statements, too-many-locals
 def convert_circuit_to_qasm(
     input_circuit: Circuit,
     syndromes: list | None = None,
@@ -65,7 +65,7 @@ def convert_circuit_to_qasm(
         syndromes: list | None = None,
         detectors: list | None = None,
         logicals: list | None = None,
-    ):  # pylint: disable=too-many-branches,too-many-statements
+    ):  # pylint: disable=too-many-branches,too-many-statements, too-many-locals
         """
         Given the input circuit and the syndromes and/or detectors, this function:
         
@@ -92,11 +92,14 @@ def convert_circuit_to_qasm(
             A tuple containing the following: 
             
             - data_qubits_idx_mapping: dict
-                A dictionary that maps the data qubits to their index in the data register
+                A dictionary that maps the data qubits to their index in the data \
+                register
             - ancilla_qubits_idx_mapping: dict
-                A dictionary that maps the ancilla qubits to their index in the ancilla register
+                A dictionary that maps the ancilla qubits to their index in the \
+                ancilla register
             - classical_bits_idx_mapping: dict
-                A dictionary that maps the classical bits to their index in the classical register
+                A dictionary that maps the classical bits to their index in the \
+                classical register
             - classical_registers: dict
                 A dictionary that maps the classical register name to the number of bits
             - eka_to_qasm_syndromes: dict
@@ -301,7 +304,8 @@ def convert_circuit_to_qasm(
         data_qubits_dict: dict
             Dictionary that maps a quantum channel id to its index in the data register
         ancilla_qubits_dict: dict
-            Dictionary that maps a quantum channel id to its index in the ancilla register
+            Dictionary that maps a quantum channel id to its index in the ancilla
+            register
         classical_registers: dict
             Dictionary that maps the classical register name to the number of bits
 
@@ -329,7 +333,7 @@ def convert_circuit_to_qasm(
         data_qubits_map: dict[str, int],
         ancilla_qubits_map: dict[str, int],
         classical_bits_map: dict[str, int],
-    ):  # pylint: disable=too-many-branches,too-many-statements
+    ):  # pylint: disable=too-many-branches,too-many-statements, too-many-locals
         """Extracts the operator describing the quantum circuit as a QASM string.
         Each line describes a single operation applied to its respective quantum
         and classical registers.
@@ -342,7 +346,8 @@ def convert_circuit_to_qasm(
         data_qubits_map: dict
             Dictionary that maps a quantum channel id to its index in the data register
         ancilla_qubits_map: dict
-            Dictionary that maps a ancilla channel id to its index in the ancilla register
+            Dictionary that maps a ancilla channel id to its index in the ancilla
+            register
         classical_bits_map: dict
             Dictionary that maps the classical channel id to register name,idx in QASM
 
@@ -404,8 +409,8 @@ def convert_circuit_to_qasm(
 
                         # string syntax to describe measurement operation in QASM
                         string = (
-                            f"{creg_name}[{classical_registers[creg_name]-1-creg_idx}] = measure "
-                            f"{qubit_reg_name}[{qasm_qubit_id}];\n"
+                            f"{creg_name}[{classical_registers[creg_name]-1-creg_idx}] "
+                            f"= measure {qubit_reg_name}[{qasm_qubit_id}];\n"
                         )
 
                     # If its a conditional operation, parse as follows
@@ -419,13 +424,16 @@ def convert_circuit_to_qasm(
 
                             q_channels_qasm.append(f"{qubit_reg_name}[{qasm_qubit_id}]")
 
-                        # Define the if-else condition in QASM syntax using Eka classical channels
-                        openqasm_conditions = (
-                            f"{classical_bits_map[subcircuit.condition.channels[0].id][0]} == "
-                            f"{int(''.join(str(int(b)) for b in subcircuit.condition.value), 2)}"
+                        # Define the if-else condition in QASM syntax using Eka
+                        # classical channels
+                        c1 = classical_bits_map[subcircuit.condition.channels[0].id][0]
+                        c2 = int(
+                            "".join(str(int(b)) for b in subcircuit.condition.value), 2
                         )
+                        openqasm_conditions = f"{c1} == {c2}"
 
-                        # Extract the conditional circuits for both `if` and `else` branches
+                        # Extract the conditional circuits for both `if` and `else`
+                        # branches
                         conditional_branching_circuits = ["", ""]
                         for i, branch in enumerate(subcircuit.circuit):
                             for op in branch:
@@ -461,7 +469,6 @@ def convert_circuit_to_qasm(
                     string_list.append(string)
 
             # instructions to add barriers
-            # pylint: disable=fixme
             # TODO: Improve barrier placement. Currently too many!
             data_indices = ", ".join(
                 f"data_qreg[{i}]" for i in range(len(data_qubits_map))

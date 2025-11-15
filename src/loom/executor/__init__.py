@@ -15,7 +15,8 @@ limitations under the License.
 
 """
 
-# Import utility library to check for the availability of the cudaq package
+# Import utility library to check for the availability of the cudaq and
+# pennylane package
 import importlib.util as _importlib_util
 
 from .main import convert_circuit_to_cliffordsim
@@ -36,8 +37,11 @@ from .eka_circuit_to_stim_converter import (
     noise_annotated_stim_circuit,
 )
 from .eka_circuit_to_qasm_converter import convert_circuit_to_qasm
-from .eka_circuit_to_pennylane_converter import convert_circuit_to_pennylane
 
 # Import the CUDAQ converter only if the cudaq package is available
 if _importlib_util.find_spec("cudaq"):
     from .eka_circuit_to_cudaq_converter import EkaToCudaqConverter, Converter
+
+# Import the Pennylane converter only if the pennylane package is available
+if _importlib_util.find_spec("pennylane"):
+    from .eka_circuit_to_pennylane_converter import convert_circuit_to_pennylane

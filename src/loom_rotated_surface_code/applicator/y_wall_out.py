@@ -36,29 +36,38 @@ def y_wall_out(
     """Implement the y_wall_out operation.
 
     The algorithm is the following:
+
     - A) CONSISTENCY CHECK
     - B) EXTRACT GEOMETRIC INFORMATION
+
         - B.1) Extract some information about the geometry of the block and the wall
         - B.2) Find the qubits to measure
         - B.3) Find the qubits to idle
         - B.4) Find the qubits to Hadamard
+
     - C) LOGICAL OPERATORS
+
         - C.1) Find where the X logical operator should be depending on the geometry
         - C.2) Create the new X logical operator
         - C.3) Update the logical operator evolution using appropriate stabilizers
+
     - D) STABILIZERS
+
         - D.1) Find the idling stabilizers
         - D.2) Find the stabilizers that will be Hadamard-ed and moved
         - D.3) Find the new hadamard stabilizers
         - D.4) Update the stabilizer evolution
         - D.5) Put the stabilizers together
+
     - E) SYNDROME CIRCUITS
+
         - E.1) Find the idling part syndrome circuits
         - E.2) Find the new syndrome circuits for the hadamard-ed stabilizers
+
     - F) NEW BLOCK
     - G) CIRCUIT AND LOGICAL/STABILIZER UPDATES
 
-    Example: the block on the left is transformed into the block on the right:
+    Example: the block on the left is transformed into the block on the right::
 
                    X                                    X
            *(0,0) --- (1,0) --- (2,0)*          *(0,0) --- (1,0) --- (2,0)*

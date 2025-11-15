@@ -42,8 +42,8 @@ class Stabilizer(PauliOperator):
         included in the stabilizer.
 
     data_qubits : tuple[tuple[int, ...], ...]
-        Data qubits involved in the stabilizer. They are referred to by their coordinates
-        in the lattice.
+        Data qubits involved in the stabilizer. They are referred to by their
+        coordinates in the lattice.
 
     uuid : str
         Unique identifier of the stabilizer. This is automatically set to a random UUID.

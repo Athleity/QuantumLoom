@@ -229,8 +229,8 @@ def auxcnot_consistency_check(
     The configuration is the following, the upper left corners of the two blocks must
     satisfy the following relations:
 
-    * |t_block.upper_left_qubit[0] - c_block.upper_left_qubit[0]| = c_block.size[0]
-    * |t_block.upper_left_qubit[1] - c_block.upper_left_qubit[1]| = c_block.size[1]
+    - ``|t_block.upper_left_qubit[0] - c_block.upper_left_qubit[0]| = c_block.size[0]``
+    - ``|t_block.upper_left_qubit[1] - c_block.upper_left_qubit[1]| = c_block.size[1]``
 
     Parameters
     ----------
@@ -322,7 +322,7 @@ def get_grow_shrink_directions(
                 if control.x_boundary == Orientation.HORIZONTAL
                 else Direction.LEFT
             )
-        case (x, y) if x < 0 and y > 0:  # pylint: disable=chained-comparison
+        case (x, y) if x < 0 < y:
             # The control block is to the left and below the target block
             grow_direction = (
                 Direction.RIGHT
@@ -334,7 +334,7 @@ def get_grow_shrink_directions(
                 if control.x_boundary == Orientation.HORIZONTAL
                 else Direction.LEFT
             )
-        case (x, y) if x > 0 and y < 0:  # pylint: disable=chained-comparison
+        case (x, y) if x > 0 > y:
             # The control block is to the right and above the target block
             grow_direction = (
                 Direction.LEFT

@@ -43,13 +43,15 @@ class PauliArray(ABC):
     @property
     def x(self) -> np.ndarray:
         """
-        The array representing the X-component of the PauliArray in binary representation.
+        The array representing the X-component of the PauliArray in binary
+        representation.
         """
         return self.array[:, : self.nqubits]
 
     @property
     def z(self) -> np.ndarray:
         """
-        The array representing the Z-component of the PauliArray in binary representation.
+        The array representing the Z-component of the PauliArray in binary
+        representation.
         """
         return self.array[:, self.nqubits : 2 * self.nqubits]

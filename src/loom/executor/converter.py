@@ -67,7 +67,6 @@ def detector_reference_states(
     return detector_ref_parity, observable_ref_parity
 
 
-# pylint: disable=too-many-locals
 def detector_outcomes(
     measurement_counts_dict: dict,
     detector_observable_list: list[tuple],

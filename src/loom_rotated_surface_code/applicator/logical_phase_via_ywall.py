@@ -29,8 +29,8 @@ from ..operations import LogicalPhaseViaYwall
 from ..code_factory import RotatedSurfaceCode
 
 
-# pylint: disable=too-many-statements
-def logical_phase_via_ywall(  # pylint: disable=too-many-locals
+# pylint: disable=too-many-statements, too-many-locals, too-many-branches
+def logical_phase_via_ywall(
     interpretation_step: InterpretationStep,
     operation: LogicalPhaseViaYwall,
     same_timeslice: bool,

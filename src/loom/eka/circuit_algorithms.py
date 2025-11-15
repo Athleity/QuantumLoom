@@ -45,9 +45,9 @@ def coloration_circuit(
 
     The function returns a dictionary, where the keys correspond to each check nodes
     associated with a Stabilizer, and the values are the lists of data qubit channels
-    in the precise order in which the entangling gates should be applied. Idling steps are
-    added for Z(X) checks when the entangling gates between X(Z) ancillas and datas take
-    place.
+    in the precise order in which the entangling gates should be applied. Idling steps
+    are added for Z(X) checks when the entangling gates between X(Z) ancillas and datas
+    take place.
 
     Parameters
     ----------
@@ -101,7 +101,6 @@ def coloration_circuit(
     return check_to_data
 
 
-# pylint: disable=too-many-locals
 def cardinal_circuit(
     t_graph: TannerGraph,
 ) -> dict[tuple[int, int], list[tuple[int, int]]]:
@@ -115,8 +114,8 @@ def cardinal_circuit(
 
     The function returns a dictionary, where the keys correspond to each check nodes
     associated with a Stabilizer, and the values are the lists of data qubit channels
-    in the precise order in which the entangling gates should be applied. Idling steps are
-    added when ancillas do not participate in a given time step.
+    in the precise order in which the entangling gates should be applied. Idling steps
+    are added when ancillas do not participate in a given time step.
 
     Parameters
     ----------
@@ -235,7 +234,6 @@ def generate_stabilizer_and_syndrome_circuits_from_algorithm(
     return stabilizers, syndrome_circuits
 
 
-# pylint: disable=too-many-locals
 def extract_syndrome_circuit(
     pauli: str, entangling_order: list[tuple[int, ...]]
 ) -> SyndromeCircuit:

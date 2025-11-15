@@ -105,7 +105,8 @@ def interpret_operation(
                             step, op, same_timeslice, debug_mode
                         )
             raise NotImplementedError(
-                f"The Block type '{block_class_names[0]}' is not supported at the moment"
+                f"The Block type '{block_class_names[0]}' "
+                "is not supported at the moment"
             )
 
 

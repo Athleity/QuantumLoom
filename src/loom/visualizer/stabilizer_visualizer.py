@@ -241,8 +241,9 @@ class StabilizerPlot:  # pylint: disable=too-many-instance-attributes
             # New x coordinate
             # Previously values were in the range [xmin, xmax] and now we want to scale
             # them to the range [padding_absolute, width - padding_absolute].
-            # This corresponds to scaling by a factor of (width - 2 * padding_absolute) /
-            # (xmax - xmin) and then shifting by padding_absolute.
+            # This corresponds to scaling by a factor of
+            # (width - 2 * padding_absolute) / (xmax - xmin) and then shifting by
+            # padding_absolute.
             x_new = padding_absolute + (x - self.xmin) * (
                 self.width - 2 * padding_absolute
             ) / (self.xmax - self.xmin)
@@ -281,7 +282,7 @@ class StabilizerPlot:  # pylint: disable=too-many-instance-attributes
             list_vectors.append(self.lattice.basis_vectors[0])
         return np.sum(np.array(list_vectors), axis=0)
 
-    # pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-locals
+    # pylint: disable=too-many-locals
     def get_stabilizer_traces(
         self,
         stabilizers: list[Stabilizer],
@@ -464,7 +465,7 @@ class StabilizerPlot:  # pylint: disable=too-many-instance-attributes
         for stab in stabilizers_traces:
             self._fig.add_trace(stab)
 
-    # pylint: disable=too-many-arguments, too-many-positional-arguments, too-many-locals, too-many-branches
+    # pylint: disable=too-many-branches
     def get_dqubit_traces(
         self,
         dqb_show: list[bool] | None = None,
@@ -611,6 +612,7 @@ class StabilizerPlot:  # pylint: disable=too-many-instance-attributes
         for dqb_trace in dqubit_traces:
             self._fig.add_trace(dqb_trace)
 
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     def get_pauli_string_traces(
         self,
         operation: PauliOperator,
@@ -660,12 +662,13 @@ class StabilizerPlot:  # pylint: disable=too-many-instance-attributes
         if log_op_line_colors is None:
             log_op_line_colors = self.line_colors
 
+        # List of coordinates of the data qubits that are involved in the Pauli string
         pauli_dqubit_coords = np.array(
             [
                 np.array(self.dqubit_coordinates_map[qb]) + shift
                 for qb in operation.data_qubits
             ]
-        )  # List of coordinates of the data qubits that are involved in the Pauli string
+        )
 
         pauli_string_traces = []
 
@@ -752,7 +755,8 @@ class StabilizerPlot:  # pylint: disable=too-many-instance-attributes
         legendgroup : str | None
             Legend group to which the markers belong
         """
-        # Construct a PauliOperator containing the charge of each data qubit respectively
+        # Construct a PauliOperator containing the charge of each data qubit
+        # respectively
         op = PauliOperator(
             pauli="".join(
                 [charge for charge in block.pauli_charges.values() if charge != "_"]

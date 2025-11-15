@@ -200,7 +200,8 @@ class Tableau:  # pylint: disable=too-many-instance-attributes
         tableau.
         """
 
-        # Check that new Tableau has same number of qubits as old tableau. Raise printable warning.
+        # Check that new Tableau has same number of qubits as old tableau.
+        # Raise printable warning.
         if not self.tableau.shape == input_tableau.shape:
             raise TableauSizeError(
                 f"The Tableau has been updated from shape {self.tableau.shape} to"

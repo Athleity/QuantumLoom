@@ -853,8 +853,8 @@ def create_syndromes(  # pylint: disable= too-many-arguments
         Stabilizers created by the merge operation.
     new_stabs_increased_weight:
         Stabilizers that grew from a previous 2-body of the initial blocks.
-    merged_block_id : str
-        UUID of the newly merged block.
+    merged_block : Block
+       The newly merged block.
 
     Returns
     -------

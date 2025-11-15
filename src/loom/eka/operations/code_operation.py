@@ -230,7 +230,8 @@ class ResetAllDataQubits(CodeOperation):
         Name of the block where the logical operator should be applied.
     state: SingleQubitPauliEigenstate | None, optional
         State to which the logical qubit should be reset. Default is
-        SingleQubitPauliEigenstate.ZERO, i.e. the zero eigenstate of the Pauli Z operator.
+        SingleQubitPauliEigenstate.ZERO, i.e. the zero eigenstate of the Pauli Z
+        operator.
     """
 
     input_block_name: str
@@ -248,7 +249,8 @@ class ResetAllAncillaQubits(CodeOperation):
         Name of the block where the logical operator should be applied.
     state: SingleQubitPauliEigenstate | None, optional
         State to which the ancilla qubit should be reset. Default is
-        SingleQubitPauliEigenstate.ZERO, i.e. the zero eigenstate of the Pauli Z operator.
+        SingleQubitPauliEigenstate.ZERO, i.e. the zero eigenstate of the Pauli Z
+        operator.
     """
 
     input_block_name: str

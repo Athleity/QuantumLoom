@@ -99,7 +99,7 @@ class Eka:
                         "are too large for the lattice."
                     )
 
-        # TODO: Add checks for ancilla qubits # pylint: disable=fixme
+        # TODO: Add checks for ancilla qubits
 
         return blocks
 

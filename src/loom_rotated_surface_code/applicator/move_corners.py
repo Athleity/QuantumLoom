@@ -35,10 +35,11 @@ def move_corners(
 ) -> InterpretationStep:
     """
     Move the selected topological corners of the block in the specified direction. We
-     assume that the initial state is a RotatedSurfaceCode with a single logical qubit
-     and the topological corners are located at the geometric corners.
-     This function can move he topological corners mutlitple times in a row, as long as
-     the qubits selected are topological corners of the block.
+    assume that the initial state is a RotatedSurfaceCode with a single logical qubit
+    and the topological corners are located at the geometric corners.
+
+    This function can move he topological corners mutlitple times in a row, as long as
+    the qubits selected are topological corners of the block.
 
     NOTE: This function automatically measures the syndromes of the final block once.
 
@@ -156,31 +157,40 @@ def move_corner(  # pylint: disable=too-many-locals, too-many-statements
 ]:
     """
     Move the selected topological corner of the block in the specified direction. We
-     assume that the initial state is a RotatedSurfaceCode with a single logical qubit
-     and the topological corners are located at the geometric corners.
+    assume that the initial state is a RotatedSurfaceCode with a single logical qubit
+    and the topological corners are located at the geometric corners.
 
     The algorithm is the following:
-    - A) STABILIZERS
+
+    - A.) STABILIZERS
+
         - A.1) Cut the corner stabilizer if a 2-body stabilizer is involved
         - A.2) Generate the two-body stabilizers to be added
         - A.3) Find which stabilizers are untouched on the modified boundary
         - A.4) Compute the evolution of the stabilizers
         - A.5) Construct the set of kept bulk stabilizers
         - A.6) Construct the new set of stabilizers
-    - B) LOGICAL OPERATORS
+
+    - B.) LOGICAL OPERATORS
+
         - B.1) Move the logical operators so they stay on the right boundary or
-        extend/contract them
+            extend/contract them
         - B.2) Update the logical operators
         - B.3) Collect the necessary stabilizers for logical operator updates
-    - C) SYNDROME CIRCUITS
+
+    - C.) SYNDROME CIRCUITS
+
         - C.1) Find corner configuration of new block
         - C.2) Generate new syndrome circuits and stabilizer schedules based on corner
-        config
+            config
         - C.3) Update stabilizer evolution
-    - D) CIRCUIT
+
+    - D.) CIRCUIT
+
         - D.1) Measure the corner if needed
         - D.2) Create stabilizer and logical operator updates
-    - E) BUILD BLOCK
+
+    - E.) BUILD BLOCK
 
     Parameters
     ----------
