@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
 
-PACKAGES=("loom") # List all packages to generate API documentation for here
-
+PACKAGES=("loom" "loom_rotated_surface_code" "loom_repetition_code" "loom_five_qubit_perfect_code" "loom_shor_code" "loom_steane_code") # List all packages to generate API documentation for here
 for package in "${PACKAGES[@]}"; do
   poetry run sphinx-apidoc -f --no-toc --remove-old --module-first -d 1 --separate \
   -o source/apidoc/api_autogen/$package \

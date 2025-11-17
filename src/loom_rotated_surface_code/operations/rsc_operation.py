@@ -53,18 +53,20 @@ class TransversalHadamard(CodeOperation):
 @dataclass(**dataclass_params)
 class MoveBlock(CodeOperation):
     """
-    Move the selected block 1-unit in the chosen direction, in a fault tolerant manner.
-    The SWAP operation occurs as part of the syndrome extraction round allowing for
-    the block to be fault tolerant throughout the move.
+    Move the selected block 1 unit in the chosen direction in a fault-tolerant manner.
+    The SWAP operation occurs as part of the syndrome extraction round, allowing the block
+    to remain fault tolerant throughout the move.
 
-    NOTE: 1-unit is defined as the distance between two adjacent qubits (with equal unit vectors) in the block.
-    i.e. (0, 0, 0) -> (1, 0, 0) is a 1-unit move in the x-direction(or to the "right").
+    .. note::
+        1 unit is defined as the distance between two adjacent qubits (with equal unit vectors) in the block.
+        For example, moving from (0, 0, 0) to (1, 0, 0) is a 1-unit move in the x-direction (i.e., to the "right").
 
     The possible directions are:
-    1. Direction.TOP (top) - (Moving the Block towards the top, all qubits are shifted by (0, -1, 0)
-    2. Direction.BOTTOM (bottom) - (Moving the Block towards the bottom, all qubits are shifted by (0, 1, 0)
-    3. Direction.LEFT (left) - (Moving the Block towards the left, all qubits are shifted by (-1, 0, 0)
-    4. Direction.RIGHT (right) - (Moving the Block towards the right, all qubits are shifted by (1, 0, 0)
+
+    1. Direction.TOP (top) – Moving the block toward the top; all qubits are shifted by (0, -1, 0)
+    2. Direction.BOTTOM (bottom) – Moving the block toward the bottom; all qubits are shifted by (0, 1, 0)
+    3. Direction.LEFT (left) – Moving the block toward the left; all qubits are shifted by (-1, 0, 0)
+    4. Direction.RIGHT (right) – Moving the block toward the right; all qubits are shifted by (1, 0, 0)
 
     Parameters
     ----------
@@ -80,7 +82,9 @@ class MoveBlock(CodeOperation):
 
 @dataclass(**dataclass_params)
 class LogicalPhaseViaYwall(CodeOperation):
-    """Apply a logical phase gate to a RotatedSurfaceCode block by:
+    """
+    Apply a logical phase gate to a RotatedSurfaceCode block by:
+
     1. Growing it towards the right/left or bottom/top depending on the orientation of
     the X boundary of the block. If the X boundary is horizontal, the block can be
     grown to the right or left. If the X boundary is vertical, the block can be
@@ -113,14 +117,15 @@ class RotateBlock(CodeOperation):
     Rotate a block by 90 degrees in a fault-tolerant manner. This modifies both the bulk
     and the boundaries of the block.
 
-    E.g. RotateBlock on the following rotated surface code block:
-                 x                               z
-        o --- o --- o                   o --- o --- o
-      z |  x  |  z  |                 x |  z  |  x  |
-        o --- o --- o      Rotate       o --- o --- o
-        |  z  |  x  | z      ->         |  x  |  z  | x
-        o --- o --- o                   o --- o --- o
-           x                               z
+    E.g. RotateBlock on the following rotated surface code block::
+
+                     x                               z
+            o --- o --- o                   o --- o --- o
+          z |  x  |  z  |                 x |  z  |  x  |
+            o --- o --- o      Rotate       o --- o --- o
+            |  z  |  x  | z      ->         |  x  |  z  | x
+            o --- o --- o                   o --- o --- o
+               x                               z
 
     Parameters
     ----------

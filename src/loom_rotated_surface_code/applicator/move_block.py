@@ -51,18 +51,18 @@ def move_block(
 
     The algorithm is as follows:
 
-    - A.) VALID MOVE CHECK
+    - A.) Valid move check
 
         - A.1) Check if the qubits required for the block to be moved are available.
 
-    - B.) SHIFT THE BLOCK
+    - B.) Shift the block
 
         - B.1) Shift the block in the specified direction
         - B.2) Update the block history and evolution
         - B.3) Update all the evolutions
         - B.4) Propagate all the updates
 
-    - C.) CIRCUIT GENERATION
+    - C.) Circuit generation
 
         - C.1) Find the qubit initializations required for the swap-then-qec operation
               and create the reset circuit
@@ -74,7 +74,7 @@ def move_block(
         - C.5) Combine all the circuits into one diagonal move circuit
 
     - Repeat steps A, B, C for the second diagonal direction.
-    - D.) FINAL CIRCUIT
+    - D.) Final circuit
 
         - D.1) Combine the two diagonal move circuits into one circuit and append to the
                 interpretation step.

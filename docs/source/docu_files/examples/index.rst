@@ -13,6 +13,8 @@ Jupyter Notebook examples that illustrate how to use Loom.
    :maxdepth: 1
    :caption: Contents:
 
-   Converter Example </../../notebooks/converter_example.ipynb>
-   Visualizer Circuit Example </../../notebooks/visualizer_circuit.ipynb>
-   Visualizer Stabilizer Plot Example </../../notebooks/visualizer_stabilizerplot.ipynb>
+   Converter Example </notebooks/converter_example.ipynb>
+   Visualizer Circuit Example </notebooks/visualizer_circuit.ipynb>
+   Visualizer Stabilizer Plot Example </notebooks/visualizer_stabilizerplot.ipynb>
+   CliffordSim Example </notebooks/cliffordsim_example.ipynb>
+   Validator Syndrome Extraction Example </notebooks/validator_syndrome_extraction.ipynb>

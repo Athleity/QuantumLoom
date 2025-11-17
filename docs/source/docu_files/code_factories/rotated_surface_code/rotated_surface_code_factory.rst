@@ -7,11 +7,11 @@ Rotated Surface Code Block
     :local:
     :depth: 3
 
-The rotated surface code is a popular QECC as it provides a high threshold with efficient usage of the physical qubits. 
-This package provides tools to build :class:`Block` objects for rotated surface codes, which describe one or more logical qubits, and provide information on how to perform logical operations and error correction at the physical level. 
-These :class:`Block` s can then be used as an abstraction for logical qubits, and Loom provides tools to easily apply gates to it in order to perform circuit simulation on corrected logical qubits.
+The :class:`~loom_rotated_surface_code.code_factory.rotated_surface_code.RotatedSurfaceCode` is a popular QECC as it provides a high threshold with efficient usage of the physical qubits. 
+This package provides tools to build :class:`~loom.eka.block.Block` objects for rotated surface codes, which describe one or more logical qubits, and provide information on how to perform logical operations and error correction at the physical level. 
+These :class:`~loom.eka.block.Block` s can then be used as an abstraction for logical qubits, and Loom provides tools to easily apply gates to it in order to perform circuit simulation on corrected logical qubits.
 
-The example below shows how to create a :class:`Block` for a rotated surface code of distance 3 (that represents one logical qubit).
+The example below shows how to create a :class:`~loom.eka.block.Block` for a rotated surface code of distance 3 (that represents one logical qubit).
 
 .. code-block:: python
 
@@ -33,15 +33,19 @@ The example below shows how to create a :class:`Block` for a rotated surface cod
 Operations on Rotated Surface Codes
 ------------------------------------
 
-The :mod:`~loom_rotated_surface_code.applicator` module provides tools to apply gates and perform operations on :class:`~loom.eka.block.Block`  objects representing rotated surface codes. 
-These applicators are designed to work seamlessly with the :class:`~loom_rotated_surface_code.code_factory.rotated_surface_code.RotatedSurfaceCode` class.
+The available operations for rotated surface code blocks include the standard set of operations defined in the :mod:`loom.eka.operations` module, such as syndrome measurements and logical measurements, as well as specialized lattice surgery operations defined in the :mod:`loom_rotated_surface_code.operations` module.
 
-Applicators provide implementations of Loom's high-level :class:`Operation` for a specific code. This package provide implementations for the following operations for the rotated surface code:
+Applicators provide implementations of  these operations for a rotated surface code. The operations specific to the rotated surface code include:
 
-- :class:`Grow`: Expand the size of a rotated surface code :class:`Block` by adding qubits and stabilizers around its perimeter, increasing its logical qubit capacity or error-correcting capabilities.
-- :class:`Merge`: Combine two adjacent rotated surface code :class:`Block` into a single larger block by joining their boundaries, enabling operations on the resulting logical qubit.
-- :class:`Shrink`: Reduce the size of a rotated surface code :class:`Block` by removing qubits and stabilizers from its edges, typically to prepare for operations like merging that require boundaries properly aligned and of equal size.
-- :class:`Split`: Divide a rotated surface code :class:`Block` into two smaller :class:`Block` by creating boundaries within the original block, allowing independent manipulation of the resulting logical qubits.
+- :class:`~loom.eka.operations.code_operation.Grow` (applicator: :meth:`~loom_rotated_surface_code.applicator.grow.grow`): Expand the size of a rotated surface code :class:`~loom.eka.block.Block` by adding qubits and stabilizers around its perimeter, increasing its logical qubit capacity or error-correcting capabilities.
+- :class:`~loom.eka.operations.code_operation.Merge` (applicator: :meth:`~loom_rotated_surface_code.applicator.merge.merge`): Combine two adjacent rotated surface code :class:`~loom.eka.block.Block` into a single larger block by joining their boundaries, enabling operations on the resulting logical qubit.
+- :class:`~loom.eka.operations.code_operation.Shrink` (applicator: :meth:`~loom_rotated_surface_code.applicator.shrink.shrink`): Reduce the size of a rotated surface code :class:`~loom.eka.block.Block` by removing qubits and stabilizers from its edges, typically to prepare for operations like merging that require boundaries properly aligned and of equal size.
+- :class:`~loom.eka.operations.code_operation.Split` (applicator: :meth:`~loom_rotated_surface_code.applicator.split.split`): Divide a rotated surface code :class:`~loom.eka.block.Block` into two smaller :class:`~loom.eka.block.Block` by creating boundaries within the original block, allowing independent manipulation of the resulting logical qubits.
+- :class:`~loom_rotated_surface_code.operations.rsc_operation.AuxCNOT`
+- :class:`~loom_rotated_surface_code.operations.rsc_operation.TransversalHadamard`
+- :class:`~loom_rotated_surface_code.operations.rsc_operation.MoveBlock`
+- :class:`~loom_rotated_surface_code.operations.rsc_operation.LogicalPhaseViaYwall`
+- :class:`~loom_rotated_surface_code.operations.rsc_operation.RotateBlock`
 
 Growing, merging, shrinking, and splitting are operations that modify the structure of the rotated surface code, allowing for dynamic changes to the logical qubit configuration.
 

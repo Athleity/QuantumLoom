@@ -51,15 +51,15 @@ def auxcnot(
     Apply an auxiliary CNOT operation using a Grow - Shrink - Merge - Split approach.
 
     The algorithm is the following:
-    - A) GROW CONTROL BLOCK
-    - B) MEASURE SYNDROMES OF GROWN_CONTROL AND TARGET BLOCKS
-    - C) SPLIT GROWN_CONTROL INTO CONTROL AND AUXILIARY BLOCKS
-    - D) MEASURE SYNDROMES OF CONTROL, AUXILIARY AND TARGET BLOCKS
-    - E) MERGE AUXILIARY AND TARGET BLOCKS
-    - F) MEASURE SYNDROMES OF CONTROL AND MERGED_TARGET BLOCKS
-    - G) APPLY CONDITIONALLOGICALZ CONDITIONED ON JOINT MEASUREMENT
-    - H) SHRINK THE NEW TARGET BLOCK
-    - I) WRAP THE AUXCNOT CIRCUIT IN A SINGLE CIRCUIT
+    - A) Grow control block
+    - B) Measure syndromes of grown_control and target blocks
+    - C) Split grown_control into control and auxiliary blocks
+    - D) Measure syndromes of control, auxiliary and target blocks
+    - E) Merge auxiliary and target blocks
+    - F) Measure syndromes of control and merged_target blocks
+    - G) Apply conditionallogicalz conditioned on joint measurement
+    - H) Shrink the new target block
+    - I) Wrap the auxcnot circuit in a single circuit
 
     Parameters
     ----------

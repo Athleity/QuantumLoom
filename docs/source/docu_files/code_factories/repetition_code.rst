@@ -2,8 +2,8 @@ Repetition Code
 =======================
 Repetition Code Block
 ----------------------
-The repetition code is a simple :math:`[n, 1, n]` error-correcting code that encodes a single logical qubit with :math:`n` physical qubits. 
-By specifying the code distance :math:`d`, stabilizer type (X or Z), the physical lattice, and lattice position, this code factory allows the user to build :class:`Block` that describe one logical qubit with the specified parameters.
+The :class:`~loom_repetition_code.code_factory.repetition_code.RepetitionCode` is a simple :math:`[n, 1, n]` error-correcting code that encodes a single logical qubit with :math:`n` physical qubits. 
+By specifying the code distance :math:`d`, stabilizer type (X or Z), the physical lattice, and lattice position, this code factory allows the user to build :class:`~loom.eka.block.Block` that describe one logical qubit with the specified parameters.
 
 The example below shows how to create a repetition code with 5 data qubits, which encodes a single logical qubit with X stabilizers.
 
@@ -27,15 +27,15 @@ The example below shows how to create a repetition code with 5 data qubits, whic
 Operations on Repetition Code
 ---------------------------------
 
-The :mod:`loom.applicator` module provides tools to apply gates and perform operations on :class:`Block` objects representing repetition codes. 
-These applicators are designed to work seamlessly with the `RepetitionCode` class, providing a simple high-level interface for lattice surgery and logical operations. 
-In addition to the basic applicators (Paulis, reset and measurement), this module includes specialized applicators for repetition codes. 
-These include:
+The :mod:`~loom.eka.operations` module provides high-level definition of operations that can be applied on :class:`~loom.eka.block.Block` objects.
+The lower-level implementations specific to :class:`~loom_repetition_code.code_factory.RepetitionCode` class, are defined in the :mod:`~loom_repetition_code.applicator` module.
 
-- grow: Expand the size of a repetition code :class:`Block` by adding qubits and stabilizers around its perimeter, increasing its logical qubit capacity or error-correcting capabilities.
-- merge: Combine two adjacent repetition code :class:`Block` into a single larger block by joining their boundaries, enabling operations across the combined logical qubits.
-- shrink: Reduce the size of a repetition code :class:`Block` by removing qubits and stabilizers from its edges, typically to free resources or prepare for operations like splitting.
-- split: Divide a repetition code :class:`Block` into two smaller :class:`Block` by creating boundaries within the original block, allowing independent manipulation of the resulting logical qubits.
+On top of the common operations (resets, logical measurements, etc...), the repetition code applicators include implementations for the following operations:
+
+- grow: Expand the size of a repetition code :class:`~loom.eka.block.Block` by adding qubits and stabilizers around its perimeter, increasing its logical qubit capacity or error-correcting capabilities.
+- merge: Combine two adjacent repetition code :class:`~loom.eka.block.Block` into a single larger block by joining their boundaries, enabling operations across the combined logical qubits.
+- shrink: Reduce the size of a repetition code :class:`~loom.eka.block.Block` by removing qubits and stabilizers from its edges, typically to free resources or prepare for operations like splitting.
+- split: Divide a repetition code :class:`~loom.eka.block.Block` into two smaller :class:`~loom.eka.block.Block` by creating boundaries within the original block, allowing independent manipulation of the resulting logical qubits.
 
 Growing, merging, shrinking, and splitting are operations that modify the structure of the repetition code, allowing for dynamic changes to the logical qubit configuration.
 
@@ -47,7 +47,7 @@ Example of application :
     from loom_repc.applicator import RepetitionCodeApplicator
     from loom_repc.code_factory import RepetitionCode
     from loom.eka import Eka, Lattice
-    from loom.eka.operations import ResetAllDataQubits, MeasureBlockSyndromes, Shrink, Merge, MeasureBlockSyndromes, MeasureLogicalZ
+    from loom.eka.operations import ResetAllDataQubits, MeasureBlockSyndromes, Shrink, Merge, MeasureLogicalZ
     from loom.interpreter import interpret_eka
 
     lattice = Lattice.linear(...)
