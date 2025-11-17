@@ -2,7 +2,7 @@ Steane Code Factory
 ===================
 Steane Code Block
 -----------------
-The Steane code is a simple :math:`[7, 1, 3]` error-correcting code that encodes a single logical qubit with :math:`7` physical qubits. 
+The :class:`~loom_steane_code.code_factory.steane_code.SteaneCode` is a simple :math:`[7, 1, 3]` error-correcting code that encodes a single logical qubit with :math:`7` physical qubits.
 
 .. code-block:: python
     
@@ -22,4 +22,4 @@ The Steane code is a simple :math:`[7, 1, 3]` error-correcting code that encodes
 Operations on Steane Code
 -------------------------
 We currently do not provide any special code operations specific to the Steane code. 
-The only operations available are the ones that already apply to all `Block` objects in Loom.
+The operations available are the ones defined in loom's :mod:`~loom.eka.operations` module.

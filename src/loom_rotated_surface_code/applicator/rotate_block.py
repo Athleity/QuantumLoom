@@ -43,34 +43,34 @@ def rotate_block(
 
     The rotation is performed by:
 
-    - A) VALIDITY CHECKS
+    - A.) Validity checks
 
         - A.1) Check that the block is a valid RotatedSurfaceCode block for RotateBlock
 
-    - B) GROW THE BLOCK IN THE SPECIFIED DIRECTION
+    - B.) Grow the block in the specified direction
 
         - B.1) Grow the block to double its size minus one in the specified direction
         - B.2) Measure syndromes to complete the grow operation
         - B.3) Move the logical operators so that they are correctly located on the
                 top-left qubit of the grown block
 
-    - C) MOVE THE CORNERS APPROPRIATELY
+    - C.) Move the corners appropriately
 
         - C.1) Move each corner individually
         - C.2) Measure syndromes to complete the corner move in a fault-tolerant manner
 
-    - D) SHRINK THE BLOCK
+    - D.) Shrink the block
 
         - D.1) Shrink the block from the grown side by distance - 2
         - D.2) Shrink the block from the opposite side by 1 to return to original size
 
-    - E) MOVE BLOCK
+    - E.) Move block
 
         - E.1) Move the block so that it's occupying the same data qubits as initially
         - E.2) Move the logical operators so that they are correctly located on the
                 top-left qubit of the shrunk block
 
-    - F) WRAP THE CIRCUIT
+    - F.) Wrap the circuit
 
         - F.1) Isolate the circuit corresponding to the RotateBlock operation and append
                 it as a single Circuit object to the intermediate circuit sequence

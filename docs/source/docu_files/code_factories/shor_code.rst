@@ -2,7 +2,7 @@ Shor Code Factory
 =================
 Shor Code Block
 -----------------
-The Shor code is a simple :math:`[9, 1, 3]` error-correcting code that encodes a single logical qubit with :math:`9` physical qubits. 
+The :class:`~loom_shor_code.code_factory.shor_code.ShorCode` is a simple :math:`[9, 1, 3]` error-correcting code that encodes a single logical qubit with :math:`9` physical qubits.
 
 .. code-block:: python
     
@@ -21,4 +21,4 @@ The Shor code is a simple :math:`[9, 1, 3]` error-correcting code that encodes a
 Operations on Shor Code
 -------------------------
 We currently do not provide any special code operations specific to the Shor code. 
-The only operations available are the ones that already apply to all `Block` objects in Loom.
+The operations available are the ones defined in loom's :mod:`~loom.eka.operations` module.

@@ -2,7 +2,7 @@ Five Qubit Perfect Code Factory
 ===============================
 Five Qubit Perfect Code Block
 -------------------------------
-The five qubit perfect code is a simple :math:`[5, 1, 3]` error-correcting code that encodes a single logical qubit with :math:`5` physical qubits. 
+The :class:`~loom_five_qubit_perfect_code.code_factory.five_qubit_perfect_code.FiveQubitPerfectCode` is a simple :math:`[5, 1, 3]` error-correcting code that encodes a single logical qubit with :math:`5` physical qubits.
 
 .. code-block:: python
     
@@ -21,4 +21,4 @@ The five qubit perfect code is a simple :math:`[5, 1, 3]` error-correcting code 
 Operations on Five Qubit Perfect Code
 -------------------------------------
 We currently do not provide any special code operations specific to the Five Qubit Perfect Code. 
-The only operations available are the ones that already apply to all `Block` objects in Loom.
+The operations available are the ones defined in loom's :mod:`~loom.eka.operations` module.
