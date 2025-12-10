@@ -17,7 +17,6 @@ limitations under the License.
 
 from loom.interpreter import InterpretationStep
 from loom.interpreter.applicator import measureblocksyndromes
-from loom.eka import Circuit
 from loom.eka.utilities import Direction, Orientation, DiagonalDirection
 from loom.eka.operations import MeasureBlockSyndromes, Grow, Shrink
 from .utilities import add_vector
@@ -43,38 +42,33 @@ def rotate_block(
 
     The rotation is performed by:
 
-    - A.) Validity checks
+    - A.) Begin RotateBlock composite operation session
 
-        - A.1) Check that the block is a valid RotatedSurfaceCode block for RotateBlock
+    - B.) Validity checks
+        - B.1) Check that the block is a valid RotatedSurfaceCode block for RotateBlock
 
-    - B.) Grow the block in the specified direction
-
-        - B.1) Grow the block to double its size minus one in the specified direction
-        - B.2) Measure syndromes to complete the grow operation
-        - B.3) Move the logical operators so that they are correctly located on the
+    - C.) Grow the block in the specified direction
+        - C.1) Grow the block to double its size minus one in the specified direction
+        - C.2) Measure syndromes to complete the grow operation
+        - C.3) Move the logical operators so that they are correctly located on the
                 top-left qubit of the grown block
 
-    - C.) Move the corners appropriately
+    - D.) Move the corners appropriately
+        - D.1) Move each corner individually
+        - D.2) Measure syndromes to complete the corner move in a fault-tolerant manner
 
-        - C.1) Move each corner individually
-        - C.2) Measure syndromes to complete the corner move in a fault-tolerant manner
+    - E.) Shrink the block
+        - E.1) Shrink the block from the grown side by distance - 2
+        - E.2) Shrink the block from the opposite side by 1 to return to original size
 
-    - D.) Shrink the block
-
-        - D.1) Shrink the block from the grown side by distance - 2
-        - D.2) Shrink the block from the opposite side by 1 to return to original size
-
-    - E.) Move block
-
-        - E.1) Move the block so that it's occupying the same data qubits as initially
-        - E.2) Move the logical operators so that they are correctly located on the
+    - F.) Move block
+        - F.1) Move the block so that it's occupying the same data qubits as initially
+        - F.2) Move the logical operators so that they are correctly located on the
                 top-left qubit of the shrunk block
 
-    - F.) Wrap the circuit
-
-        - F.1) Isolate the circuit corresponding to the RotateBlock operation and append
-                it as a single Circuit object to the intermediate circuit sequence
-
+    - G.) Final Circuit
+        - G.1) End the composite operation session and append the full rotate block \
+        circuit
 
     Parameters
     ----------
@@ -96,20 +90,27 @@ def rotate_block(
     rsc_block = interpretation_step.get_block(operation.input_block_name)
     grow_direction = operation.grow_direction
 
-    # A) VALIDITY CHECKS
-    # A.1) Check that the block is a valid RotatedSurfaceCode block for RotateBlock
+    # A.) Begin composite operation session
+    interpretation_step.begin_composite_operation_session_MUT(
+        same_timeslice=same_timeslice,
+        circuit_name=(
+            f"Rotate boundary {rsc_block.unique_label} by growing towards "
+            f"{grow_direction.name}"
+        ),
+    )
+
+    # B) Validity checks
+    # B.1) Check that the block is a valid RotatedSurfaceCode block for RotateBlock
     rotate_validity_check(rsc_block)
 
     # Extract useful parameters
     # - distance of the block
-    # - initial length of the intermediate circuit sequence so that we can later
-    #   isolate the rotate boundary circuit
+    #   Extract the code distance and current block object
     distance = min(rsc_block.size)
-    init_circ_len = len(interpretation_step.intermediate_circuit_sequence)
     current_block = interpretation_step.get_block(rsc_block.unique_label)
 
-    # B) GROW THE BLOCK IN THE SPECIFIED DIRECTION
-    # B.1) Grow the block to double its size minus one in the specified direction
+    # C) Grow the block in the specified direction
+    # C.1) Grow the block to double its size minus one in the specified direction
     interpretation_step = grow(
         interpretation_step,
         Grow(rsc_block.unique_label, grow_direction, length=distance - 1),
@@ -118,7 +119,7 @@ def rotate_block(
     )
     current_block = interpretation_step.get_block(rsc_block.unique_label)
 
-    # B.2) Measure syndromes to complete the grow operation
+    # C.2) Measure syndromes to complete the grow operation
     interpretation_step = measureblocksyndromes(
         interpretation_step,
         MeasureBlockSyndromes(rsc_block.unique_label, n_cycles=distance),
@@ -126,7 +127,7 @@ def rotate_block(
         debug_mode=debug_mode,
     )
 
-    # B.3) Move the logical operators so that they are correctly located on the top-left
+    # C.3) Move the logical operators so that they are correctly located on the top-left
     #     qubit of the grown block
     top_left_qubit = current_block.upper_left_qubit
     for logical_pauli in ["X", "Z"]:
@@ -137,10 +138,9 @@ def rotate_block(
             pauli=logical_pauli,
         )
 
-    # C) MOVE THE CORNERS APPROPRIATELY
+    # D) Move the corners appropriately
     for corner_args in get_boundary_rotation_corner_args_5_1(current_block):
-        # C.1) Move each corner individually
-        # pylint: disable=duplicate-code
+        # D.1) Move each corner individually
         interpretation_step = move_corners(
             interpretation_step,
             current_block,
@@ -149,7 +149,7 @@ def rotate_block(
             debug_mode=debug_mode,
         )
         current_block = interpretation_step.get_block(rsc_block.unique_label)
-        # C.2) Measure syndromes to complete the corner move in a fault-tolerant manner
+        # D.2) Measure syndromes to complete the corner move in a fault-tolerant manner
         interpretation_step = measureblocksyndromes(
             interpretation_step,
             MeasureBlockSyndromes(rsc_block.unique_label, n_cycles=distance - 1),
@@ -157,8 +157,8 @@ def rotate_block(
             debug_mode=debug_mode,
         )
 
-    # D) SHRINK THE BLOCK
-    # D.1) Shrink the block from the grown side by distance - 2
+    # E) Shrink the block
+    # E.1) Shrink the block from the grown side by distance - 2
     interpretation_step = shrink(
         interpretation_step,
         Shrink(current_block.unique_label, grow_direction, length=distance - 2),
@@ -167,7 +167,7 @@ def rotate_block(
     )
     current_block = interpretation_step.get_block(rsc_block.unique_label)
 
-    # D.2) Shrink the block from the opposite side by 1 to return to original size
+    # E.2) Shrink the block from the opposite side by 1 to return to original size
     interpretation_step = shrink(
         interpretation_step,
         Shrink(current_block.unique_label, grow_direction.opposite(), length=1),
@@ -176,8 +176,8 @@ def rotate_block(
     )
     current_block = interpretation_step.get_block(rsc_block.unique_label)
 
-    # E) MOVE BLOCK
-    # E.1) Move the block so that it's occupying the same data qubits as initially
+    # F) Move block
+    # F.1) Move the block so that it's occupying the same data qubits as initially
     interpretation_step = move_block(
         interpretation_step,
         MoveBlock(current_block.unique_label, direction=grow_direction.opposite()),
@@ -186,7 +186,7 @@ def rotate_block(
     )
     current_block = interpretation_step.get_block(rsc_block.unique_label)
 
-    # E.2) Move the logical operators so that they are correctly located on the top-left
+    # F.2) Move the logical operators so that they are correctly located on the top-left
     #     qubit of the shrunk block
     top_left_qubit = current_block.upper_left_qubit
     for logical_pauli in ["X", "Z"]:
@@ -197,30 +197,10 @@ def rotate_block(
             pauli=logical_pauli,
         )
 
-    # F) WRAP THE CIRCUIT
-    # F.1) Isolate the circuit corresponding to the RotateBlock operation and append
-    #      it as a single Circuit object to the intermediate circuit sequence
-    new_len = len(interpretation_step.intermediate_circuit_sequence)
-    len_rotate_block = new_len - init_circ_len
-    circuit_seq = interpretation_step.pop_intermediate_circuit_MUT(len_rotate_block)
-    # pylint: disable=duplicate-code
-    wrapped_circuit_seq = ()
-    for timeslice in circuit_seq:
-        timespan = max(composite_circuit.duration for composite_circuit in timeslice)
-        # Create a circuit with empty timeslices and align circuits
-        template_circ = (
-            tuple(composite_circuit for composite_circuit in timeslice),
-        ) + ((),) * (timespan - 1)
-        wrapped_circuit_seq += template_circ
-
-    wrapped_circuit = Circuit(
-        name=(
-            f"rotate boundary {rsc_block.unique_label} by growing towards "
-            f"{grow_direction.name}"
-        ),
-        circuit=wrapped_circuit_seq,
-    )
-    interpretation_step.append_circuit_MUT(wrapped_circuit, same_timeslice)
+    # G) Final Circuit
+    # G.1) End the composite operation session and append the full rotate block circuit
+    rotate_block_circuit = interpretation_step.end_composite_operation_session_MUT()
+    interpretation_step.append_circuit_MUT(rotate_block_circuit, same_timeslice)
     return interpretation_step
 
 

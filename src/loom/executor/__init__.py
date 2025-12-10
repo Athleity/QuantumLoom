@@ -15,33 +15,27 @@ limitations under the License.
 
 """
 
-# Import utility library to check for the availability of the cudaq and
-# pennylane package
-import importlib.util as _importlib_util
-
-from .main import convert_circuit_to_cliffordsim
-from .converter import detector_reference_states, detector_outcomes
-from .utilities import format_channel_label_to_tuple
 from .circuit_error_model import (
     CircuitErrorModel,
     ErrorType,
     ApplicationMode,
     ErrorProbProtocol,
     HomogeneousTimeIndependentCEM,
-    HomogeneousTimeDependentCEM,
     AsymmetricDepolarizeCEM,
 )
-
-from .eka_circuit_to_stim_converter import (
-    EkaCircuitToStimConverter,
-    noise_annotated_stim_circuit,
+from .op_signature import (
+    OpSignature,
+    OpType,
+    ALL_EKA_OP_SIGNATURES,
+    CLIFFORD_GATES_SIGNATURE,
+    USUAL_QUANTUM_GATES,
+    USUAL_CLIFFORD_GATES,
 )
-from .eka_circuit_to_qasm_converter import convert_circuit_to_qasm
 
-# Import the CUDAQ converter only if the cudaq package is available
-if _importlib_util.find_spec("cudaq"):
-    from .eka_circuit_to_cudaq_converter import EkaToCudaqConverter, Converter
-
-# Import the Pennylane converter only if the pennylane package is available
-if _importlib_util.find_spec("pennylane"):
-    from .eka_circuit_to_pennylane_converter import convert_circuit_to_pennylane
+from .converter import Converter
+from .executor import Executor, TargetLanguage
+from .eka_to_mimiq_converter import EkaToMimiqConverter
+from .eka_to_pennylane_converter import EkaToPennylaneConverter
+from .eka_to_qasm_converter import EkaToQasmConverter
+from .eka_to_stim_converter import EkaToStimConverter
+from .eka_to_cudaq_converter import EkaToCudaqConverter

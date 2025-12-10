@@ -15,7 +15,7 @@ limitations under the License.
 
 """
 
-from loom.eka import Stabilizer, Circuit, Block
+from loom.eka import Stabilizer, Block
 
 from ..syndrome import Syndrome
 from ..interpretation_step import InterpretationStep
@@ -67,13 +67,7 @@ def generate_syndromes(
         interpretation_step.block_qec_rounds[block.uuid] = 1
 
     # Extract stabilizer labels to be inherited by the Syndromes and add the time stamp
-    # This is generically not a true time-stamp as operations sometimes are added and
-    # popped - It currently stands as a placeholder until a global time tracker is added
-    time_stamp = len(
-        Circuit.construct_padded_circuit_time_sequence(
-            interpretation_step.intermediate_circuit_sequence
-        )
-    )
+    time_stamp = interpretation_step.get_timestamp()
 
     # Create new Syndromes
     new_syndromes = tuple(

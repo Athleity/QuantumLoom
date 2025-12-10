@@ -17,7 +17,6 @@ limitations under the License.
 
 from uuid import uuid4
 
-from loom.eka import Circuit
 from loom.eka.operations import (
     Merge,
     Split,
@@ -38,8 +37,6 @@ from .shrink import shrink
 from ..code_factory import RotatedSurfaceCode
 from ..operations import AuxCNOT
 
-# pylint: disable=duplicate-code
-
 
 def auxcnot(
     interpretation_step: InterpretationStep,
@@ -51,15 +48,16 @@ def auxcnot(
     Apply an auxiliary CNOT operation using a Grow - Shrink - Merge - Split approach.
 
     The algorithm is the following:
-    - A) Grow control block
-    - B) Measure syndromes of grown_control and target blocks
-    - C) Split grown_control into control and auxiliary blocks
-    - D) Measure syndromes of control, auxiliary and target blocks
-    - E) Merge auxiliary and target blocks
-    - F) Measure syndromes of control and merged_target blocks
-    - G) Apply conditionallogicalz conditioned on joint measurement
-    - H) Shrink the new target block
-    - I) Wrap the auxcnot circuit in a single circuit
+    - A) Begin AuxCNOT composite operation session
+    - B) Grow control block
+    - C) Measure syndromes of grown_control and target blocks
+    - D) Split grown_control into control and auxiliary blocks
+    - E) Measure syndromes of control, auxiliary and target blocks
+    - F) Merge auxiliary and target blocks
+    - G) Measure syndromes of control and merged_target blocks
+    - H) Apply ConditionalLogicalZ conditioned on joint measurement
+    - I) Shrink the new target block
+    - J) End AuxCNOT composite operation session and append circuit
 
     Parameters
     ----------
@@ -78,10 +76,17 @@ def auxcnot(
     InterpretationStep
         The updated interpretation step after applying the auxiliary CNOT operation.
     """
-    init_circ_len = len(interpretation_step.intermediate_circuit_sequence)
 
     c_block = interpretation_step.get_block(operation.input_blocks_name[0])
     t_block = interpretation_step.get_block(operation.input_blocks_name[1])
+
+    # A) Begin AuxCNOT composite operation session
+    interpretation_step.begin_composite_operation_session_MUT(
+        same_timeslice=same_timeslice,
+        circuit_name=(
+            f"auxcnot between {c_block.unique_label} and {t_block.unique_label}"
+        ),
+    )
 
     auxcnot_consistency_check(c_block, t_block)
 
@@ -90,7 +95,7 @@ def auxcnot(
         target=t_block,
     )
 
-    # A) GROW CONTROL BLOCK
+    # B) Grow control block
     interpretation_step = auxcnot_grow_control(
         interpretation_step=interpretation_step,
         control=c_block,
@@ -109,7 +114,7 @@ def auxcnot(
     ]:
         aux_unique_label = str(uuid4())
 
-    # B) MEASURE SYNDROMES OF GROWN_CONTROL AND TARGET BLOCKS
+    # C) Measure syndromes of grown_control and target blocks
     for block, internal_same_timeslice in ((grown_control, False), (t_block, True)):
         interpretation_step = measureblocksyndromes(
             interpretation_step=interpretation_step,
@@ -118,7 +123,7 @@ def auxcnot(
             debug_mode=debug_mode,
         )
 
-    # C) SPLIT GROWN_CONTROL INTO CONTROL AND AUXILIARY BLOCKS
+    # D) Split grown_control into control and auxiliary blocks
     interpretation_step = auxcnot_split_control(
         interpretation_step=interpretation_step,
         aux_unique_label=aux_unique_label,
@@ -133,7 +138,7 @@ def auxcnot(
     new_control = interpretation_step.get_block(c_block.unique_label)
     aux_block = interpretation_step.get_block(aux_unique_label)
 
-    # D) MEASURE SYNDROMES OF CONTROL, AUXILIARY AND TARGET BLOCKS
+    # E) Measure syndromes of control, auxiliary and target blocks
     for block, internal_same_timeslice in (
         (new_control, False),
         (aux_block, True),
@@ -146,7 +151,7 @@ def auxcnot(
             debug_mode=debug_mode,
         )
 
-    # E) MERGE AUXILIARY AND TARGET BLOCKS
+    # F) Merge auxiliary and target blocks
     interpretation_step = auxcnot_merge_aux_target(
         interpretation_step=interpretation_step,
         aux=aux_block,
@@ -158,7 +163,7 @@ def auxcnot(
     # Get the merged target block
     merged_target = interpretation_step.get_block(t_block.unique_label)
 
-    # F) MEASURE SYNDROMES OF CONTROL AND MERGED_TARGET BLOCKS
+    # G) Measure syndromes of control and merged_target blocks
     for block, internal_same_timeslice, n_cycles in (
         (new_control, True, 1),
         (new_control, False, min(new_control.size) - 1),
@@ -171,7 +176,7 @@ def auxcnot(
             debug_mode=debug_mode,
         )
 
-    # G) APPLY CONDITIONALLOGICALZ CONDITIONED ON JOINT MEASUREMENT
+    # H) Apply ConditionalLogicalZ conditioned on joint measurement
     interpretation_step = auxcnot_conditional_logical_z(
         interpretation_step=interpretation_step,
         new_control=new_control,
@@ -183,7 +188,7 @@ def auxcnot(
         debug_mode=debug_mode,
     )
 
-    # H) SHRINK THE NEW TARGET BLOCK
+    # I) Shrink the new target block
     interpretation_step = auxcnot_shrink_target(
         interpretation_step=interpretation_step,
         initial_target=t_block,
@@ -193,25 +198,9 @@ def auxcnot(
         debug_mode=debug_mode,
     )
 
-    # I) WRAP THE AUXCNOT CIRCUIT IN A SINGLE CIRCUIT
-    new_len = len(interpretation_step.intermediate_circuit_sequence)
-    len_auxcnot = new_len - init_circ_len
-    circuit_seq = interpretation_step.pop_intermediate_circuit_MUT(len_auxcnot)
-
-    wrapped_circuit_seq = ()
-    for timeslice in circuit_seq:
-        timespan = max(composite_circuit.duration for composite_circuit in timeslice)
-        # Create a circuit with empty timeslices and align circuits
-        template_circ = (
-            tuple(composite_circuit for composite_circuit in timeslice),
-        ) + ((),) * (timespan - 1)
-        wrapped_circuit_seq += template_circ
-
-    wrapped_circuit = Circuit(
-        name=(f"auxcnot between {c_block.unique_label} and {t_block.unique_label}"),
-        circuit=wrapped_circuit_seq,
-    )
-    interpretation_step.append_circuit_MUT(wrapped_circuit, same_timeslice)
+    # J) End AuxCNOT composite operation session and append circuit
+    auxcnot_circ = interpretation_step.end_composite_operation_session_MUT()
+    interpretation_step.append_circuit_MUT(auxcnot_circ, same_timeslice)
 
     # Return the final step
     return interpretation_step

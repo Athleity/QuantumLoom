@@ -12,4 +12,5 @@ env/
 
 *.DS_Store
 
+_revision.py
 test_env/

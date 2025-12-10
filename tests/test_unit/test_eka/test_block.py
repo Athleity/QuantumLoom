@@ -15,98 +15,54 @@ limitations under the License.
 
 """
 
-# pylint: disable=too-many-lines
-import unittest
 from pydantic import ValidationError
-import numpy as np
-import networkx as nx
+import pytest
 
-from loom.eka import (
-    Block,
-    Stabilizer,
-    PauliOperator,
-    ParityCheckMatrix,
-    TannerGraph,
-)
+from loom.eka import Block, Stabilizer, PauliOperator
 from loom.eka.utilities import loads, dumps, uuid_error
 
+# pylint: disable=redefined-outer-name
 
-class TestBlock(
-    unittest.TestCase
-):  # pylint: disable=too-many-public-methods, too-many-instance-attributes
-    """
-    Test for the Block class.
-    """
 
-    def setUp(self):
-        # Manually construct a simple distance-3 rotated surface code block
-        # Note 1: Since uuids are not explicitly assigned to code `Stabilizer`s,
-        # they are automatically generated.
-        # Note 2: Since the fields `Block.syndrome_circuits` and
-        # `Block.stabilizer_to_circuit` are not explicitly assigned, they are
-        # automatically populated by validation checks in the `Block` class.
-        # pylint: disable=duplicate-code
-
-        # Rotated surface code variables
-        self.rotated_surface_code = Block(
-            stabilizers=(
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((1, 0, 0), (1, 1, 0), (0, 0, 0), (0, 1, 0)),
-                    ancilla_qubits=((1, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((2, 1, 0), (2, 2, 0), (1, 1, 0), (1, 2, 0)),
-                    ancilla_qubits=((2, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((1, 1, 0), (0, 1, 0), (1, 2, 0), (0, 2, 0)),
-                    ancilla_qubits=((1, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((2, 0, 0), (1, 0, 0), (2, 1, 0), (1, 1, 0)),
-                    ancilla_qubits=((2, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((0, 0, 0), (0, 1, 0)),
-                    ancilla_qubits=((0, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((2, 1, 0), (2, 2, 0)),
-                    ancilla_qubits=((3, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((2, 0, 0), (1, 0, 0)),
-                    ancilla_qubits=((2, 0, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((1, 2, 0), (0, 2, 0)),
-                    ancilla_qubits=((1, 3, 1),),
-                ),
+@pytest.fixture(scope="class")
+def rep_code_stabilizers() -> list[Stabilizer]:
+    """Provides the stabilizers for a repetition code block."""
+    return [
+        Stabilizer(
+            pauli="XX",
+            data_qubits=(
+                (0, 0),
+                (1, 0),
             ),
-            logical_x_operators=[
-                PauliOperator(
-                    pauli="XXX", data_qubits=((0, 0, 0), (1, 0, 0), (2, 0, 0))
-                )
-            ],
-            logical_z_operators=[
-                PauliOperator(
-                    pauli="ZZZ", data_qubits=((0, 0, 0), (0, 1, 0), (0, 2, 0))
-                )
-            ],
-            unique_label="q1",
-        )
+            ancilla_qubits=((3, 1),),
+        ),
+        Stabilizer(
+            pauli="XX",
+            data_qubits=(
+                (1, 0),
+                (2, 0),
+            ),
+            ancilla_qubits=((4, 1),),
+        ),
+    ]
 
-        # Steane code variables
-        data_supports_ham = [[0, 1, 2, 3], [1, 2, 4, 5], [2, 3, 5, 6]]
-        self.stabilizers_steane = [
+
+@pytest.fixture(scope="class")
+def rep_code_logical_operators() -> tuple[PauliOperator, PauliOperator]:
+    """Provides the logical operators for a repetition code block."""
+    logical_x = PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
+    logical_z = PauliOperator(pauli="ZZZ", data_qubits=((0, 0), (1, 0), (2, 0)))
+    return logical_x, logical_z
+
+
+@pytest.fixture(scope="class")
+def steane_block() -> Block:
+    """Return a Steane code block."""
+    # Steane code variables
+    data_supports_ham = [[0, 1, 2, 3], [1, 2, 4, 5], [2, 3, 5, 6]]
+
+    return Block(
+        stabilizers=[
             Stabilizer(
                 pauli=p * 4,
                 data_qubits=[(d, 0) for d in support],
@@ -114,61 +70,28 @@ class TestBlock(
             )
             for i, support in enumerate(data_supports_ham)
             for j, p in enumerate("XZ")
-        ]
-        logical_x_steane = PauliOperator(
-            pauli="X" * 7, data_qubits=[(i, 0) for i in range(7)]
-        )
-        logical_z_steane = PauliOperator(
-            pauli="Z" * 7, data_qubits=[(i, 0) for i in range(7)]
-        )
+        ],
+        logical_x_operators=[
+            PauliOperator(pauli="X" * 7, data_qubits=[(i, 0) for i in range(7)])
+        ],
+        logical_z_operators=[
+            PauliOperator(pauli="Z" * 7, data_qubits=[(i, 0) for i in range(7)])
+        ],
+    )
 
-        self.steane_block = Block(
-            stabilizers=self.stabilizers_steane,
-            logical_x_operators=[logical_x_steane],
-            logical_z_operators=[logical_z_steane],
-        )
 
-        h_hamming = np.array(
-            [[1, 1, 1, 1, 0, 0, 0], [0, 1, 1, 0, 1, 1, 0], [0, 0, 1, 1, 0, 1, 1]],
-            dtype=int,
-        )
+@pytest.fixture(scope="class")
+def shor_block() -> Block:
+    """Return a Shor code block."""
+    # Shor code variables
+    x_indices = [[(i + 3 * j, 0) for i in range(6)] for j in range(2)]
+    z_indices = [
+        [(i + j + 3 * k, 0) for i in range(2)] for k in range(3) for j in range(2)
+    ]
+    paulis = ["X" * 6, "Z" * 2]
 
-        self.h_steane = np.vstack(
-            (
-                np.hstack((h_hamming, np.zeros(h_hamming.shape, dtype=int))),
-                np.hstack((np.zeros(h_hamming.shape, dtype=int), h_hamming)),
-            )
-        )
-
-        datas_ham = list(range(7))
-        checks_ham = list(range(3))
-
-        # Add extra index to datas and checks to match stabilizer qubit format
-        x_nodes_steane = [((i, 1), {"label": "X"}) for i in checks_ham]
-        z_nodes_steane = [((i + 3, 1), {"label": "Z"}) for i in checks_ham]
-        data_nodes_steane = [((i, 0), {"label": "data"}) for i in datas_ham]
-
-        x_edges_steane = [
-            ((c, 1), (d, 0))
-            for c, supp in zip(checks_ham, data_supports_ham, strict=True)
-            for d in supp
-        ]
-        z_edges_steane = [((c[0] + 3, 1), d) for c, d in x_edges_steane]
-
-        self.g_steane = nx.Graph()
-        self.g_steane.add_nodes_from(x_nodes_steane)
-        self.g_steane.add_nodes_from(z_nodes_steane)
-        self.g_steane.add_nodes_from(data_nodes_steane)
-        self.g_steane.add_edges_from(x_edges_steane + z_edges_steane)
-
-        # Shor code variables
-        x_indices = [[(i + 3 * j, 0) for i in range(6)] for j in range(2)]
-        z_indices = [
-            [(i + j + 3 * k, 0) for i in range(2)] for k in range(3) for j in range(2)
-        ]
-        paulis = ["X" * 6, "Z" * 2]
-
-        self.stabilizers_shor = [
+    return Block(
+        stabilizers=[
             Stabilizer(
                 pauli=paulis[i],
                 data_qubits=data_qubits,
@@ -176,82 +99,29 @@ class TestBlock(
             )
             for i, indices in enumerate([x_indices, z_indices])
             for j, data_qubits in enumerate(indices)
-        ]
+        ],
+        logical_x_operators=[
+            PauliOperator(pauli="X" * 9, data_qubits=[(i, 0) for i in range(9)])
+        ],
+        logical_z_operators=[
+            PauliOperator(pauli="Z" * 9, data_qubits=[(i, 0) for i in range(9)])
+        ],
+    )
 
-        logical_x_shor = PauliOperator(
-            pauli="X" * 9, data_qubits=[(i, 0) for i in range(9)]
-        )
-        logical_z_shor = PauliOperator(
-            pauli="Z" * 9, data_qubits=[(i, 0) for i in range(9)]
-        )
 
-        self.shor_block = Block(
-            stabilizers=self.stabilizers_shor,
-            logical_x_operators=[logical_x_shor],
-            logical_z_operators=[logical_z_shor],
-        )
+class TestBlock:  # pylint: disable=too-many-public-methods
+    """
+    Test for the Block class.
+    """
 
-        hx_shor = np.array([[1, 1, 1, 1, 1, 1, 0, 0, 0], [0, 0, 0, 1, 1, 1, 1, 1, 1]])
-        hz_shor = np.array(
-            [
-                [1, 1, 0, 0, 0, 0, 0, 0, 0],
-                [0, 1, 1, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 1, 1, 0, 0, 0, 0],
-                [0, 0, 0, 0, 1, 1, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 1, 1, 0],
-                [0, 0, 0, 0, 0, 0, 0, 1, 1],
-            ]
-        )
-        self.h_shor = np.vstack(
-            (
-                np.hstack((hx_shor, np.zeros(hx_shor.shape, dtype=int))),
-                np.hstack((np.zeros(hz_shor.shape, dtype=int), hz_shor)),
-            )
-        )
-
-        self.g_shor = nx.Graph()
-
-        # Add extra index to datas and checks to match stabilizer qubit format
-        data_nodes_shor = [((i, 0), {"label": "data"}) for i in range(9)]
-        x_nodes_shor = [((i, 1), {"label": "X"}) for i in range(2)]
-        z_nodes_shor = [((i + 2, 1), {"label": "Z"}) for i in range(6)]
-
-        x_edges_shor = [((i, 1), (j + 3 * i, 0)) for i in range(2) for j in range(6)]
-        z_edges_shor = [
-            ((i + 2, 1), (j + 3 * (i // 2) + (i % 2), 0))
-            for i in range(6)
-            for j in range(2)
-        ]
-
-        self.g_shor.add_nodes_from(x_nodes_shor)
-        self.g_shor.add_nodes_from(z_nodes_shor)
-        self.g_shor.add_nodes_from(data_nodes_shor)
-        self.g_shor.add_edges_from(x_edges_shor + z_edges_shor)
-
-    def test_creation_valid_block(self):
+    def test_creation_valid_block(
+        self, rep_code_stabilizers, rep_code_logical_operators
+    ):
         """
         Test the creation of a Block object.
         """
-        stabilizers = [
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (0, 0),
-                    (1, 0),
-                ),
-                ancilla_qubits=((3, 1),),
-            ),
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (1, 0),
-                    (2, 0),
-                ),
-                ancilla_qubits=((4, 1),),
-            ),
-        ]
-        logical_x = PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
-        logical_z = PauliOperator(pauli="ZZZ", data_qubits=((0, 0), (1, 0), (2, 0)))
+        stabilizers = rep_code_stabilizers
+        logical_x, logical_z = rep_code_logical_operators
 
         block = Block(
             stabilizers=stabilizers,
@@ -260,392 +130,250 @@ class TestBlock(
             unique_label="q1",
         )
 
-        self.assertEqual(block.unique_label, "q1")
-        self.assertEqual(block.stabilizers, tuple(stabilizers))
-        self.assertEqual(block.logical_x_operators, (logical_x,))
-        self.assertEqual(block.logical_z_operators, (logical_z,))
-        self.assertEqual(block.skip_validation, False)
+        assert block.unique_label == "q1"
+        assert block.stabilizers == tuple(stabilizers)
+        assert block.logical_x_operators == (logical_x,)
+        assert block.logical_z_operators == (logical_z,)
+        assert block.skip_validation is False
 
     # Test of the "before" validators
     # NOTE they are tested in the order they are executed with pydantic (bottom to top
     # in the code)
-    def test_validate_non_empty_stabilizers(self):
-        """
-        Test that an error is raised if the stabilizers list is empty. This is tested
-        in _assign_types() before the Block is created.
-        """
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=[],
-                logical_x_operators=self.rotated_surface_code.logical_x_operators,
-                logical_z_operators=self.rotated_surface_code.logical_z_operators,
-            )
-        self.assertIn("List cannot be empty.", str(cm.exception))
-
-    def test_validate_non_empty_log_operators(self):
-        """
-        Test that an error is raised if the logical_x_operators list is empty. This
-        is tested in _assign_types() before the Block is created.
-        """
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers,
-                logical_x_operators=[],
-                logical_z_operators=[],
-            )
-        self.assertIn("List cannot be empty.", str(cm.exception))
-
-    def test_validate_distinct_stabilizers(self):
-        """
-        Test that an error is raised if the stabilizers are not distinct. This is
-        tested in _validate_distinct_stabilizers() before the Block is created.
-        """
-        # Ensure that the number of stabilizers is still right but one is repeated
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers[:-1]
-                + self.rotated_surface_code.stabilizers[0:1],
-                logical_x_operators=self.rotated_surface_code.logical_x_operators,
-                logical_z_operators=self.rotated_surface_code.logical_z_operators,
-            )
-        err_msg = "Value error, Stabilizers must be distinct."
-        self.assertIn(err_msg, str(cm.exception))
-
-    def test_validate_distinct_logical_x_operators(self):
-        """
-        Test that an error is raised if the logical_x_operators are not distinct.
-        This is tested in _validate_distinct_logical_x_operators() before the Block is
-        created.
-        """
-        # Add an additional valid stabilizer first to make sure dimensions are correct
-        additional_stab = Stabilizer(pauli="Z", data_qubits=((10, 10, 0),))
-        # Add an additional valid logical Z first to make sure dimensions are correct
-        additional_log_z_operator = PauliOperator(pauli="Z", data_qubits=((10, 10, 0),))
-        # Test repeated logical X operators
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers + (additional_stab,),
-                logical_x_operators=self.rotated_surface_code.logical_x_operators
-                + self.rotated_surface_code.logical_x_operators,  # Repeated logicalX op
-                logical_z_operators=self.rotated_surface_code.logical_z_operators
-                + (additional_log_z_operator,),
-            )
-        err_msg = "Logical X operators must be distinct."
-        self.assertIn(err_msg, str(cm.exception))
-
-    def test_validate_distinct_logical_z_operators(self):
-        """
-        Test that an error is raised if the logical_z_operators are not distinct.
-        This is tested in _validate_distinct_logical_z_operators() before the Block is
-        created.
-        """
-        # Add an additional stabilizer first to make sure dimensions are correct
-        additional_stab = Stabilizer(pauli="Z", data_qubits=((10, 10, 0),))
-        # Add an additional logical X first to make sure dimensions are correct
-        additional_log_x_operator = PauliOperator(pauli="Z", data_qubits=((10, 10, 0),))
-        # Test repeated logical Z operators
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers + (additional_stab,),
-                logical_x_operators=self.rotated_surface_code.logical_x_operators
-                + (additional_log_x_operator,),
-                logical_z_operators=self.rotated_surface_code.logical_z_operators
-                + self.rotated_surface_code.logical_z_operators,  # Repeated logicalZ op
-            )
-        err_msg = "Logical Z operators must be distinct."
-        self.assertIn(err_msg, str(cm.exception))
-
-    def test_validate_number_of_logical_operators(self):
-        """
-        Test that an error is raised if the number of logical X operators is
-        not equal to the number of logical Z operators. This is tested in
-        _validate_number_of_logical_operators() before the Block is created.
-        """
-        # Add an additional stabilizer first to make sure dimensions are correct
-        additional_stab = Stabilizer(pauli="Z", data_qubits=((10, 10, 0),))
-        additional_z_operator = PauliOperator(
-            pauli="ZZZ", data_qubits=((1, 0, 0), (1, 1, 0), (1, 2, 0))
-        )
-        # Test for different number of logical X and Z operators
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers + (additional_stab,),
-                logical_x_operators=self.rotated_surface_code.logical_x_operators,
-                logical_z_operators=self.rotated_surface_code.logical_z_operators
-                + (additional_z_operator,),
-            )
-        err_msg = (
-            "Value error, The number of logical X operators must be equal to "
-            "the number of logical Z operators."
-        )
-        self.assertIn(err_msg, str(cm.exception))
-
-    # Test of the "after" validators
-    def test_validate_coordinate_dimensions(self):
-        """
-        Test that an error is raised if the coordinates of all qubits don't have the
-        same dimensions. This is tested in _validate_coordinate_dimensions() after the
-        Block is created.
-        """
-        stabilizers = [
-            Stabilizer(
-                pauli="XX",
-                data_qubits=((0, 0), (1, 0)),
-                ancilla_qubits=((3, 0, 1),),  # Different dimensions
-            ),
-            Stabilizer(
-                pauli="XX",
-                data_qubits=((1, 0), (2, 0)),
-                ancilla_qubits=((4, 1),),
-            ),
+    def test_validators_raise(self, rsc_block, subtests):
+        """Tests that the validators raise the appropriate errors."""
+        test_case = [
+            {
+                "case_name": "empty_stabilizers",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": [],
+                "logical_x": rsc_block.logical_x_operators,
+                "logical_z": rsc_block.logical_z_operators,
+                "err_msg": "List cannot be empty.",
+            },
+            {
+                "case_name": "empty_logical_operators",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers,
+                "logical_x": [],
+                "logical_z": [],
+                "err_msg": "List cannot be empty.",
+            },
+            {
+                "case_name": "non_distinct_stabilizers",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers[:-1] + rsc_block.stabilizers[0:1],
+                "logical_x": rsc_block.logical_x_operators,
+                "logical_z": rsc_block.logical_z_operators,
+                "err_msg": "Value error, Stabilizers must be distinct.",
+            },
+            {
+                "case_name": "non_distinct_logical_x_operators",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers
+                + (Stabilizer(pauli="Z", data_qubits=((10, 10, 0),)),),
+                "logical_x": rsc_block.logical_x_operators
+                + rsc_block.logical_x_operators[0:1],
+                "logical_z": rsc_block.logical_z_operators
+                + (PauliOperator("Z", [(10, 10, 0)]),),
+                "err_msg": "Logical X operators must be distinct.",
+            },
+            {
+                "case_name": "non_distinct_logical_z_operators",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers
+                + (Stabilizer(pauli="Z", data_qubits=((10, 10, 0),)),),
+                "logical_x": rsc_block.logical_x_operators
+                + (PauliOperator("Z", [(10, 10, 0)]),),
+                "logical_z": rsc_block.logical_z_operators
+                + rsc_block.logical_z_operators[0:1],
+                "err_msg": "Logical Z operators must be distinct.",
+            },
+            {
+                "case_name": "unequal_logical_operators",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers
+                + (Stabilizer(pauli="Z", data_qubits=((10, 10, 0),)),),
+                "logical_x": rsc_block.logical_x_operators,
+                "logical_z": rsc_block.logical_z_operators
+                + (
+                    PauliOperator(
+                        pauli="ZZZ", data_qubits=((1, 0, 0), (1, 1, 0), (1, 2, 0))
+                    ),
+                ),
+                "err_msg": (
+                    "Value error, The number of logical X operators must be equal to "
+                    "the number of logical Z operators."
+                ),
+            },
+            {
+                "case_name": "qubit with wrong coordinate dimension",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": [
+                    Stabilizer(
+                        pauli="XX",
+                        data_qubits=((0, 0), (1, 0)),
+                        ancilla_qubits=((3, 0, 1),),  # Different dimensions
+                    ),
+                    Stabilizer(
+                        pauli="XX",
+                        data_qubits=((1, 0), (2, 0)),
+                        ancilla_qubits=((4, 1),),
+                    ),
+                ],
+                "logical_x": [
+                    PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
+                ],
+                "logical_z": [
+                    PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
+                ],
+                "err_msg": "All qubits coordinates must have the same dimension.",
+            },
+            {
+                "case_name": "qubit of logical op not in stabilizers",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers,
+                "logical_x": (PauliOperator("X", [(10, 10, 0)]),),
+                "logical_z": (PauliOperator("Z", [(10, 10, 0)]),),
+                "err_msg": (
+                    "Qubits {(10, 10, 0)} are not included in the stabilizers but"
+                    " are used in the logical operators"
+                ),
+            },
+            {
+                "case_name": (
+                    "number of logical qubits not compatible with qubits in"
+                    " stabilizer"
+                ),
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers
+                + (
+                    Stabilizer(
+                        pauli="ZZ",
+                        data_qubits=((10, 10, 0), (10, 11, 0)),
+                    ),
+                ),
+                "logical_x": rsc_block.logical_x_operators,
+                "logical_z": rsc_block.logical_z_operators,
+                "err_msg": (
+                    "The number of qubits and independent stabilizers in the"
+                    " Block is not compatible with the number of logical qubits."
+                ),
+            },
+            {
+                "case_name": "non commuting stabilizers",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers[:-1]
+                + (Stabilizer(pauli="Z", data_qubits=((0, 0, 0),)),),
+                "logical_x": rsc_block.logical_x_operators,
+                "logical_z": rsc_block.logical_z_operators,
+                "err_msg": "Stabilizers must commute with each other",
+            },
+            {
+                "case_name": "non commuting logical x operators",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers
+                + (
+                    Stabilizer(
+                        pauli="ZZ",
+                        data_qubits=((10, 10, 0), (10, 11, 0)),
+                    ),
+                ),
+                "logical_x": rsc_block.logical_x_operators
+                + (PauliOperator(pauli="Z", data_qubits=((0, 0, 0),)),),
+                "logical_z": rsc_block.logical_z_operators
+                + (PauliOperator(pauli="Z", data_qubits=((10, 10, 0),)),),
+                "err_msg": "Logical X operators must commute with each other",
+            },
+            {
+                "case_name": "non commuting stabilizer x logical X operators",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers
+                + (
+                    Stabilizer(
+                        pauli="ZZ",
+                        data_qubits=((10, 10, 0), (10, 11, 0)),
+                    ),
+                ),
+                "logical_x": rsc_block.logical_x_operators
+                + (PauliOperator(pauli="X", data_qubits=((10, 10, 0),)),),
+                "logical_z": rsc_block.logical_z_operators
+                + (PauliOperator(pauli="Z", data_qubits=((10, 10, 0),)),),
+                "err_msg": "Stabilizers must commute with logical X operators",
+            },
+            {
+                "case_name": "non commuting stabilizer x logical Z operators",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers
+                + (
+                    Stabilizer(
+                        pauli="XX",
+                        data_qubits=((10, 10, 0), (10, 11, 0)),
+                    ),
+                ),
+                "logical_x": rsc_block.logical_x_operators
+                + (PauliOperator(pauli="X", data_qubits=((10, 10, 0),)),),
+                "logical_z": rsc_block.logical_z_operators
+                + (PauliOperator(pauli="Z", data_qubits=((10, 10, 0),)),),
+                "err_msg": "Stabilizers must commute with logical Z operators",
+            },
+            {
+                "case_name": "Logical operators Z, X on same index don't commute",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers
+                + (
+                    Stabilizer(
+                        pauli="XX",
+                        data_qubits=((10, 10, 0), (10, 11, 0)),
+                    ),
+                ),
+                "logical_x": rsc_block.logical_x_operators
+                + (PauliOperator(pauli="X", data_qubits=((10, 10, 0),)),),
+                "logical_z": rsc_block.logical_z_operators
+                + (PauliOperator(pauli="X", data_qubits=((10, 11, 0),)),),
+                "err_msg": (
+                    "Logical X and Z operators at the same index must"
+                    " anticommute with each other"
+                ),
+            },
+            {
+                "case_name": "Logical operators Z, X on same index don't anticommute 2",
+                "unique_label": rsc_block.unique_label,
+                "stabilizers": rsc_block.stabilizers
+                + (
+                    Stabilizer(
+                        pauli="XXX",
+                        data_qubits=((0, 10, 0), (1, 10, 0), (2, 10, 0)),
+                    ),
+                ),
+                "logical_x": rsc_block.logical_x_operators
+                + (
+                    PauliOperator(pauli="X", data_qubits=((0, 10, 0),)),
+                    PauliOperator(pauli="XX", data_qubits=((1, 10, 0), (2, 10, 0))),
+                ),
+                "logical_z": rsc_block.logical_z_operators
+                + (
+                    PauliOperator(pauli="ZZ", data_qubits=((0, 10, 0), (1, 10, 0))),
+                    PauliOperator(pauli="ZZ", data_qubits=((1, 10, 0), (2, 10, 0))),
+                ),
+                "err_msg": (
+                    "Logical X and Z operators at different indices must commute"
+                    " with each other"
+                ),
+            },
         ]
-        logical_x = PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
-        logical_z = PauliOperator(pauli="ZZZ", data_qubits=((0, 0), (1, 0), (2, 0)))
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                stabilizers=stabilizers,
-                logical_x_operators=[logical_x],
-                logical_z_operators=[logical_z],
-                unique_label="q1",
-            )
-        err_msg = "All qubits coordinates must have the same dimension."
-        self.assertIn(err_msg, str(cm.exception))
 
-    def test_validate_qubits_included(self):
-        """
-        Test that an error is raised if the qubits in the logical operators are not
-        included in the stabilizers. This is tested in _validate_qubits_included()
-        before the Block is created.
-        """
-        # Replace the usual logical operators by ones outside of the block
-        error_log_x = PauliOperator("X", [(10, 10, 0)])
-        error_log_z = PauliOperator("Z", [(10, 10, 0)])
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers,
-                logical_x_operators=[error_log_x],
-                logical_z_operators=[error_log_z],
-            )
-        err_msg = (
-            "Qubits {(10, 10, 0)} are not included in the stabilizers but are used "
-            "in the logical operators"
-        )
-        self.assertIn(err_msg, str(cm.exception))
+        for case in test_case:
+            with subtests.test(message=case["case_name"]):
+                with pytest.raises(ValueError) as cm:
+                    _ = Block(
+                        unique_label=case["unique_label"],
+                        stabilizers=case["stabilizers"],
+                        logical_x_operators=case["logical_x"],
+                        logical_z_operators=case["logical_z"],
+                    )
+                assert case["err_msg"] in str(cm.value)
 
-    def test_validate_dimensional_compatibility(self):
-        """
-        Test that an error is raised if the number of qubits and stabilizers in the
-        Block is not compatible with the number of logical qubits. This is tested in
-        _validate_dimensional_compatibility() after the Block is created.
-        """
-        # Add an additional stabilizer to trigger dimensional compatibility error
-        # There are now 9+2 data qubits, 8+1 stabilizers, 1 logical X and 1 logical Z
-        additional_stab = Stabilizer(
-            pauli="ZZ",
-            data_qubits=((10, 10, 0), (10, 11, 0)),
-        )
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers + (additional_stab,),
-                logical_x_operators=self.rotated_surface_code.logical_x_operators,
-                logical_z_operators=self.rotated_surface_code.logical_z_operators,
-            )
-        err_msg = (
-            "The number of qubits and independent stabilizers in the Block is "
-            "not compatible with the number of logical qubits."
-        )
-        self.assertIn(err_msg, str(cm.exception))
-
-    def test_validate_commutation_stabilizers(self):
-        """
-        Test that an error is raised if the stabilizers do not commute with each
-        other. This is tested in _validate_commutation_stabilizers() after the Block is
-        created.
-        """
-        # Add a non-commuting stabilizer
-        non_commuting_stab = Stabilizer(pauli="Z", data_qubits=((0, 0, 0),))
-        # Make sure that the total number of stabilizers is still correct
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers[:-1]
-                + (non_commuting_stab,),
-                logical_x_operators=self.rotated_surface_code.logical_x_operators,
-                logical_z_operators=self.rotated_surface_code.logical_z_operators,
-            )
-        err_msg = "Stabilizers must commute with each other"
-        self.assertIn(err_msg, str(cm.exception))
-
-    def test_validate_commutation_logical_operators(self):
-        """
-        Test that an error is raised if the logical operators do not commute with
-        each other for both X and Z operators. This is tested in
-        _validate_commutation_logical_operators() after the Block is created.
-        """
-        # Add an additional stabilizer first to make sure dimensions are correct
-        additional_stab = Stabilizer(
-            pauli="ZZ",
-            data_qubits=((10, 10, 0), (10, 11, 0)),
-        )
-        # Add an additional logical Z first to make sure dimensions are correct
-        additional_log_z_operator = PauliOperator(pauli="Z", data_qubits=((10, 10, 0),))
-        # Add a non-commuting logical X operator
-        non_commuting_logical_x = PauliOperator(pauli="Z", data_qubits=((0, 0, 0),))
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers + (additional_stab,),
-                logical_x_operators=self.rotated_surface_code.logical_x_operators
-                + (non_commuting_logical_x,),
-                logical_z_operators=self.rotated_surface_code.logical_z_operators
-                + (additional_log_z_operator,),
-            )
-        err_msg = "Logical X operators must commute with each other"
-        self.assertIn(err_msg, str(cm.exception))
-
-        # Add an additional stabilizer first to make sure dimensions are correct
-        additional_stab = Stabilizer(
-            pauli="XX",
-            data_qubits=((10, 10, 0), (10, 11, 0)),
-        )
-        # Add an additional logical X first to make sure dimensions are correct
-        additional_log_x_operator = PauliOperator(pauli="X", data_qubits=((10, 10, 0),))
-        # Add a non-commuting logical Z operator
-        non_commuting_logical_z = PauliOperator(pauli="X", data_qubits=((0, 0, 0),))
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers + (additional_stab,),
-                logical_x_operators=self.rotated_surface_code.logical_x_operators
-                + (additional_log_x_operator,),
-                logical_z_operators=self.rotated_surface_code.logical_z_operators
-                + (non_commuting_logical_z,),
-            )
-        err_msg = "Logical Z operators must commute with each other"
-        self.assertIn(err_msg, str(cm.exception))
-
-    def test_validate_commutation_stabilizers_logical_operators(self):
-        """
-        Test that an error is raised if the stabilizers do not commute with the
-        logical operators. This is tested in
-        _validate_commutation_stabilizers_logical_operators() after the Block is
-        created.
-        """
-        # Test that stabilizers commute with all logical X
-        # Add an additional stabilizer first to make sure dimensions are correct
-        additional_stab = Stabilizer(
-            pauli="ZZ",
-            data_qubits=((10, 10, 0), (10, 11, 0)),
-        )
-        # Add an additional logical Z first to make sure dimensions are correct
-        commuting_logical_z = PauliOperator(pauli="Z", data_qubits=((10, 10, 0),))
-        # Add a non-commuting logical X operator to trigger the error
-        non_commuting_logical_x = PauliOperator(pauli="X", data_qubits=((10, 10, 0),))
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers + (additional_stab,),
-                logical_x_operators=self.rotated_surface_code.logical_x_operators
-                + (non_commuting_logical_x,),
-                logical_z_operators=self.rotated_surface_code.logical_z_operators
-                + (commuting_logical_z,),
-            )
-        err_msg = "Stabilizers must commute with logical X operators"
-        self.assertIn(err_msg, str(cm.exception))
-
-        # Test that stabilizers commute with all logical Z
-        # Add an additional stabilizer first to make sure dimensions are correct
-        additional_stab = Stabilizer(
-            pauli="XX",
-            data_qubits=((10, 10, 0), (10, 11, 0)),
-        )
-        # Add an additional logical X first to make sure dimensions are correct
-        commuting_logical_x = PauliOperator(pauli="X", data_qubits=((10, 10, 0),))
-        # Add a non-commuting logical Z operator to trigger the error
-        non_commuting_logical_z = PauliOperator(pauli="Z", data_qubits=((10, 10, 0),))
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers + (additional_stab,),
-                logical_x_operators=self.rotated_surface_code.logical_x_operators
-                + (commuting_logical_x,),
-                logical_z_operators=self.rotated_surface_code.logical_z_operators
-                + (non_commuting_logical_z,),
-            )
-        err_msg = "Stabilizers must commute with logical Z operators"
-        self.assertIn(err_msg, str(cm.exception))
-
-    def test_validate_anticommutation_logical_operators_one_to_one(self):
-        """
-        Test that an error is raised if the logical X and Z operators at the same
-        index do not anti-commute. Test that an error is raised if the logical X and Z
-        operators at different indices do not commute. This is tested in
-        _validate_anticommutation_logical_operators_one_to_one() after the Block is
-        created.
-        """
-        # Test anti-commutation of logical operators at the same index
-        # Add an additional stabilizer first to make sure dimensions are correct
-        additional_stab = Stabilizer(
-            pauli="XX",
-            data_qubits=((10, 10, 0), (10, 11, 0)),
-        )
-        # Add a logical X and logical Z operator that do not anti-commute
-        new_logical_x = PauliOperator(pauli="X", data_qubits=((10, 10, 0),))
-        new_logical_z = PauliOperator(pauli="X", data_qubits=((10, 11, 0),))
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers + (additional_stab,),
-                logical_x_operators=self.rotated_surface_code.logical_x_operators
-                + (new_logical_x,),
-                logical_z_operators=self.rotated_surface_code.logical_z_operators
-                + (new_logical_z,),
-            )
-        err_msg = (
-            "Logical X and Z operators at the same index must anticommute with "
-            "each other"
-        )
-        self.assertIn(err_msg, str(cm.exception))
-
-        # Test commutation relation of logical operators at different indices
-        # Add additional stabilizer first to make sure dimensions are correct
-        additional_stab = Stabilizer(
-            pauli="XXX",
-            data_qubits=((0, 10, 0), (1, 10, 0), (2, 10, 0)),
-        )
-        # Add a logical X and logical Z operator that do not anti-commute
-        new_logical_xs = (
-            PauliOperator(pauli="X", data_qubits=((0, 10, 0),)),
-            PauliOperator(pauli="XX", data_qubits=((1, 10, 0), (2, 10, 0))),
-        )
-        new_logical_zs = (
-            PauliOperator(pauli="ZZ", data_qubits=((0, 10, 0), (1, 10, 0))),
-            PauliOperator(pauli="ZZ", data_qubits=((1, 10, 0), (2, 10, 0))),
-        )
-        with self.assertRaises(ValueError) as cm:
-            _ = Block(
-                unique_label=self.rotated_surface_code.unique_label,
-                stabilizers=self.rotated_surface_code.stabilizers + (additional_stab,),
-                logical_x_operators=self.rotated_surface_code.logical_x_operators
-                + new_logical_xs,
-                logical_z_operators=self.rotated_surface_code.logical_z_operators
-                + new_logical_zs,
-            )
-        err_msg = (
-            "Logical X and Z operators at different indices must commute with "
-            "each other"
-        )
-        self.assertIn(err_msg, str(cm.exception))
-
-    def test_block_reducible_stabilizers(self):
+    def test_block_reducible_stabilizers(self, rsc_block):
         """
         Test that no error is raised when the stabilizers are reducible.
         """
@@ -655,75 +383,34 @@ class TestBlock(
             pauli="ZZXX",
             data_qubits=((0, 2, 0), (1, 2, 0), (2, 1, 0), (2, 2, 0)),
         )
-        _ = Block(
-            unique_label=self.rotated_surface_code.unique_label,
-            stabilizers=self.rotated_surface_code.stabilizers + (additional_stab,),
-            logical_x_operators=self.rotated_surface_code.logical_x_operators,
-            logical_z_operators=self.rotated_surface_code.logical_z_operators,
+        b = Block(
+            unique_label=rsc_block.unique_label,
+            stabilizers=rsc_block.stabilizers + (additional_stab,),
+            logical_x_operators=rsc_block.logical_x_operators,
+            logical_z_operators=rsc_block.logical_z_operators,
         )
 
-    def test_loads_dumps(self):
+        assert isinstance(b, Block)
+
+    def test_loads_dumps(self, rsc_block):
         """
         Test that the loads and dumps functions work correctly.
         """
-        stabilizers = [
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (0, 0),
-                    (1, 0),
-                ),
-                ancilla_qubits=((3, 1),),
-            ),
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (1, 0),
-                    (2, 0),
-                ),
-                ancilla_qubits=((4, 1),),
-            ),
-        ]
-        logical_x = PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
-        logical_z = PauliOperator(pauli="ZZZ", data_qubits=((0, 0), (1, 0), (2, 0)))
 
-        block = Block(
-            stabilizers=stabilizers,
-            logical_x_operators=[logical_x],
-            logical_z_operators=[logical_z],
-            unique_label="q1",
-        )
-
-        block_json = dumps(block)
+        block_json = dumps(rsc_block)
         loaded_block = loads(Block, block_json)
 
-        self.assertEqual(loaded_block, block)
+        assert loaded_block == rsc_block
 
-    def test_qubit_properties(self):
+    def test_qubit_properties(self, rep_code_stabilizers, rep_code_logical_operators):
         """
         Test that the data_qubits, ancilla_qubits, and qubits properties work correctly.
         """
-        stabilizers = [
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (0, 0),
-                    (1, 0),
-                ),
-                ancilla_qubits=((3, 1),),
-            ),
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (1, 0),
-                    (2, 0),
-                ),
-                ancilla_qubits=((4, 1),),
-            ),
-        ]
-        logical_x = PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
-        logical_z = PauliOperator(pauli="ZZZ", data_qubits=((0, 0), (1, 0), (2, 0)))
+        data_qubits = ((0, 0), (1, 0), (2, 0))
+        ancilla_qubits = ((3, 1), (4, 1))
 
+        stabilizers = rep_code_stabilizers
+        logical_x, logical_z = rep_code_logical_operators
         block = Block(
             stabilizers=stabilizers,
             logical_x_operators=[logical_x],
@@ -731,191 +418,86 @@ class TestBlock(
             unique_label="q1",
         )
         # Comparing sets because the order of the qubits is not guaranteed
-        self.assertEqual(set(block.data_qubits), set(((0, 0), (1, 0), (2, 0))))
-        self.assertEqual(set(block.ancilla_qubits), set(((3, 1), (4, 1))))
-        self.assertEqual(
-            set(block.qubits), set(((0, 0), (1, 0), (2, 0), (3, 1), (4, 1)))
-        )
+        assert set(block.data_qubits) == set(data_qubits)
+        assert set(block.ancilla_qubits) == set(ancilla_qubits)
+        assert set(block.qubits) == set(data_qubits + ancilla_qubits)
 
-    def test_shift_function(self):
+    def test_shift_function(self, rsc_block):
         """
         Test whether the shift() function correctly shifts a block.
         """
-        block_shifted_via_func = self.rotated_surface_code.shift((3, 5))
 
-        # Define the shifted Block manually, to compare with the one created by
-        # the function `create()`
-        manual_block = Block(
-            stabilizers=(
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((4, 5, 0), (4, 6, 0), (3, 5, 0), (3, 6, 0)),
-                    ancilla_qubits=((4, 6, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[0].uuid,
-                ),
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((5, 6, 0), (5, 7, 0), (4, 6, 0), (4, 7, 0)),
-                    ancilla_qubits=((5, 7, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[1].uuid,
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((4, 6, 0), (3, 6, 0), (4, 7, 0), (3, 7, 0)),
-                    ancilla_qubits=((4, 7, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[2].uuid,
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((5, 5, 0), (4, 5, 0), (5, 6, 0), (4, 6, 0)),
-                    ancilla_qubits=((5, 6, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[3].uuid,
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((3, 5, 0), (3, 6, 0)),
-                    ancilla_qubits=((3, 6, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[4].uuid,
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((5, 6, 0), (5, 7, 0)),
-                    ancilla_qubits=((6, 7, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[5].uuid,
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((5, 5, 0), (4, 5, 0)),
-                    ancilla_qubits=((5, 5, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[6].uuid,
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((4, 7, 0), (3, 7, 0)),
-                    ancilla_qubits=((4, 8, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[7].uuid,
-                ),
-            ),
-            logical_x_operators=(
-                PauliOperator(
-                    pauli="XXX", data_qubits=((3, 5, 0), (4, 5, 0), (5, 5, 0))
-                ),
-            ),
-            logical_z_operators=(
-                PauliOperator(
-                    pauli="ZZZ", data_qubits=((3, 5, 0), (3, 6, 0), (3, 7, 0))
-                ),
-            ),
-            unique_label="q1",
-            syndrome_circuits=self.rotated_surface_code.syndrome_circuits,
-            stabilizer_to_circuit=self.rotated_surface_code.stabilizer_to_circuit,
-        )
-        # self.rotated_surface_code and manual_block are not the same because
-        # self.rotated_surface_code starts at (0,0) while manual_block starts
-        # at (3,5)
-        self.assertNotEqual(self.rotated_surface_code, manual_block)
-        # block_shifted_via_func and manual_block both start at (3,5)
-        self.assertEqual(block_shifted_via_func, manual_block)
+        dx, dy = (3, 5)
+        shifted = rsc_block.shift((dx, dy))
 
-    def test_shift_with_rename(self):
+        for (ox, oy, _), (nx, ny, _) in zip(
+            rsc_block.data_qubits, shifted.data_qubits, strict=True
+        ):
+            assert nx == ox + dx
+            assert ny == oy + dy
+
+    def test_shift_with_rename(self, rsc_block):
         """
         Test whether the shift() function also correctly renames a block.
         """
-        block_shifted_same_label = self.rotated_surface_code.shift((3, 5))
-        block_shifted_new_label = self.rotated_surface_code.shift(
-            (3, 5), new_label="q3"
-        )
+        block_shifted_same_label = rsc_block.shift((3, 5))
+        block_shifted_new_label = rsc_block.shift((3, 5), new_label="q3")
         # Check for unique_label values
-        self.assertEqual(
-            block_shifted_same_label.unique_label,
-            self.rotated_surface_code.unique_label,
+        assert (
+            block_shifted_same_label.unique_label
+            != block_shifted_new_label.unique_label
         )
-        self.assertEqual(block_shifted_same_label.unique_label, "q1")
-        self.assertEqual(block_shifted_new_label.unique_label, "q3")
+
+        assert block_shifted_same_label.unique_label == "q1"
+        assert block_shifted_new_label.unique_label == "q3"
         # Check that the class type is not changed.
-        self.assertEqual(
-            type(self.rotated_surface_code), type(block_shifted_same_label)
-        )
-        self.assertEqual(type(self.rotated_surface_code), type(block_shifted_new_label))
+        assert type(block_shifted_same_label) == type(block_shifted_new_label)
+
         # Check that the syndrome circuits are still the same
-        self.assertEqual(
-            block_shifted_same_label.syndrome_circuits,
-            self.rotated_surface_code.syndrome_circuits,
-        )
+        assert block_shifted_same_label.syndrome_circuits == rsc_block.syndrome_circuits
         # Note that the stabilizer to syndrome circuit mapping is different because new
         # Stabilizer objects were created and thus the uuids changed
 
-    def test_shift_function_invalid_input(self):
+    def test_shift_function_invalid_input(self, rsc_block):
         """
         Test whether the input validation of shift() works.
         """
         # Position has the wrong dimension
-        with self.assertRaises(ValueError):
-            _ = self.rotated_surface_code.shift((3, 5, 7, 0))
+        with pytest.raises(ValueError):
+            _ = rsc_block.shift((3, 5, 7, 0))
 
-    def test_rename(self):
+    def test_rename(self, rsc_block):
         """
         Test the rename() function of a Block.
         """
-        block_renamed = self.rotated_surface_code.rename("new_qb")
+        block_renamed = rsc_block.rename("new_qb")
         # Check that the name changed
-        self.assertEqual(block_renamed.unique_label, "new_qb")
+        assert block_renamed.unique_label == "new_qb"
         # Check that all other fields are the same
-        self.assertEqual(
-            block_renamed.stabilizers, self.rotated_surface_code.stabilizers
-        )
-        self.assertEqual(
-            block_renamed.logical_x_operators,
-            self.rotated_surface_code.logical_x_operators,
-        )
-        self.assertEqual(
-            block_renamed.logical_z_operators,
-            self.rotated_surface_code.logical_z_operators,
-        )
-        self.assertEqual(
-            block_renamed.syndrome_circuits, self.rotated_surface_code.syndrome_circuits
-        )
-        self.assertEqual(
-            block_renamed.stabilizer_to_circuit,
-            self.rotated_surface_code.stabilizer_to_circuit,
-        )
+        assert block_renamed.stabilizers == rsc_block.stabilizers
+        assert block_renamed.logical_x_operators == rsc_block.logical_x_operators
+        assert block_renamed.logical_z_operators == rsc_block.logical_z_operators
+        assert block_renamed.syndrome_circuits == rsc_block.syndrome_circuits
+        assert block_renamed.stabilizer_to_circuit == rsc_block.stabilizer_to_circuit
         # Check that the class type is not changed.
-        self.assertEqual(type(self.rotated_surface_code), type(block_renamed))
+        assert type(rsc_block) == type(block_renamed)
 
-    def test_block_creation_without_unique_label(self):
+    def test_block_creation_without_unique_label(
+        self, rep_code_stabilizers, rep_code_logical_operators
+    ):
         """
         Test whether a `unique_label` is generated automatically if not provided.
         """
         # Test uuid creation for manual creation of the block
-        stabilizers = [
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (0, 0),
-                    (1, 0),
-                ),
-                ancilla_qubits=((3, 1),),
-            ),
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (1, 0),
-                    (2, 0),
-                ),
-                ancilla_qubits=((4, 1),),
-            ),
-        ]
-        logical_x = PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
-        logical_z = PauliOperator(pauli="ZZZ", data_qubits=((0, 0), (1, 0), (2, 0)))
 
         block = Block(
-            stabilizers=stabilizers,
-            logical_x_operators=[logical_x],
-            logical_z_operators=[logical_z],
+            stabilizers=rep_code_stabilizers,
+            logical_x_operators=[rep_code_logical_operators[0]],
+            logical_z_operators=[rep_code_logical_operators[1]],
         )
         uuid_error(block.unique_label)
 
-    def test_pauli_charges(self):
+    def test_pauli_charges(self, rsc_block):
         """
         Tests whether the Pauli charges for a distance-3 rotated surface code,
         created manually, are correctly calculated.
@@ -931,366 +513,145 @@ class TestBlock(
             (2, 2, 0): "Y",
             (1, 0, 0): "X",
         }
-        self.assertEqual(
-            self.rotated_surface_code.pauli_charges, pauli_charges_expected
-        )
+        assert rsc_block.pauli_charges == pauli_charges_expected
 
-    def test_validation_stab_to_synd_circ_map(self):
+    def test_validation_stab_to_synd_circ_map(
+        self, rep_code_stabilizers, rep_code_logical_operators
+    ):
         """
         Test whether the validation works that all uuids in the stabilizer to circuit
         map must exist.
         """
-        stabilizers = [
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (0, 0),
-                    (1, 0),
-                ),
-                ancilla_qubits=((3, 1),),
-            ),
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (1, 0),
-                    (2, 0),
-                ),
-                ancilla_qubits=((4, 1),),
-            ),
-        ]
-        logical_x = PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
-        logical_z = PauliOperator(pauli="ZZZ", data_qubits=((0, 0), (1, 0), (2, 0)))
 
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as cm:
             _ = Block(
-                stabilizers=stabilizers,
-                logical_x_operators=[logical_x],
-                logical_z_operators=[logical_z],
+                stabilizers=rep_code_stabilizers,
+                logical_x_operators=[rep_code_logical_operators[0]],
+                logical_z_operators=[rep_code_logical_operators[1]],
                 stabilizer_to_circuit={"wrong_uuid": "test"},
             )
-        self.assertIn(
-            "Stabilizer with uuid wrong_uuid is not present in the stabilizers.",
-            str(cm.exception),
+        assert (
+            "Stabilizer with uuid wrong_uuid is not present in the stabilizers."
+            in str(cm.value)
         )
 
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as cm:
             _ = Block(
-                stabilizers=stabilizers,
-                logical_x_operators=[logical_x],
-                logical_z_operators=[logical_z],
-                stabilizer_to_circuit={stabilizers[0].uuid: "wrong_uuid"},
+                stabilizers=rep_code_stabilizers,
+                logical_x_operators=[rep_code_logical_operators[0]],
+                logical_z_operators=[rep_code_logical_operators[1]],
+                stabilizer_to_circuit={rep_code_stabilizers[0].uuid: "wrong_uuid"},
             )
-        self.assertIn(
-            "Syndrome circuit with uuid wrong_uuid is not present in the syndrome "
-            "circuits",
-            str(cm.exception),
-        )
+        assert (
+            "Syndrome circuit with uuid wrong_uuid is not present in the syndrome"
+            " circuits"
+        ) in str(cm.value)
 
-    def test_bypass_validation_invalid_block(self):
+    def test_bypass_validation_invalid_block(
+        self, rep_code_stabilizers, rep_code_logical_operators
+    ):
         """
         Test whether the skip_validation flag works correctly.
         """
-        stabilizers = [
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (0, 0),
-                    (1, 0),
-                ),
-                ancilla_qubits=((3, 1),),
-            ),
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (1, 0),
-                    (2, 0),
-                ),
-                ancilla_qubits=((4, 1),),
-            ),
-        ]
-        logical_x = PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
-        logical_z = PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
 
         # Test that the Block is created without any issues, even though it should be
-        # invalid
+        # invalid (use same logical operator for X and Z)
         _ = Block(
-            stabilizers=stabilizers,
-            logical_x_operators=[logical_x],
-            logical_z_operators=[logical_z],
+            stabilizers=rep_code_stabilizers,
+            logical_x_operators=[rep_code_logical_operators[0]],
+            logical_z_operators=[rep_code_logical_operators[0]],
             skip_validation=True,
         )
         # Check that the validation fails, when enabled
-        with self.assertRaises(ValidationError):
+        with pytest.raises(ValidationError):
             _ = Block(
-                stabilizers=stabilizers,
-                logical_x_operators=[logical_x],
-                logical_z_operators=[logical_z],
+                stabilizers=rep_code_stabilizers,
+                logical_x_operators=[rep_code_logical_operators[0]],
+                logical_z_operators=[rep_code_logical_operators[0]],
                 skip_validation=False,
             )
 
-    def test_bypass_validation_valid_block(self):
+    def test_bypass_validation_valid_block(
+        self, rep_code_stabilizers, rep_code_logical_operators
+    ):
         """
         Test whether that a block created with skip_validation flag is initialised
         in the same way as without.
         """
-        stabilizers = [
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (0, 0),
-                    (1, 0),
-                ),
-                ancilla_qubits=((3, 1),),
-            ),
-            Stabilizer(
-                pauli="XX",
-                data_qubits=(
-                    (1, 0),
-                    (2, 0),
-                ),
-                ancilla_qubits=((4, 1),),
-            ),
-        ]
-        logical_x = PauliOperator(pauli="XXX", data_qubits=((0, 0), (1, 0), (2, 0)))
-        logical_z = PauliOperator(pauli="ZZZ", data_qubits=((0, 0), (1, 0), (2, 0)))
 
         block_without_validation = Block(
             unique_label="block",
-            stabilizers=stabilizers,
-            logical_x_operators=[logical_x],
-            logical_z_operators=[logical_z],
+            stabilizers=rep_code_stabilizers,
+            logical_x_operators=[rep_code_logical_operators[0]],
+            logical_z_operators=[rep_code_logical_operators[1]],
             skip_validation=True,
         )
         block_with_validation = Block(
             unique_label="block",
-            stabilizers=stabilizers,
-            logical_x_operators=[logical_x],
-            logical_z_operators=[logical_z],
+            stabilizers=rep_code_stabilizers,
+            logical_x_operators=[rep_code_logical_operators[0]],
+            logical_z_operators=[rep_code_logical_operators[1]],
         )
-        self.assertEqual(block_without_validation, block_with_validation)
+        assert block_without_validation == block_with_validation
 
-    def test_from_blocks_constructor(self):
+    def test_from_blocks_constructor(self, rsc_block):
         """
         Test the from_blocks constructor of the Block class.
         """
         # block_shifted_no_overlap is shifted relative to
         # self.rotated_surface_code by (0,4), so it does not overlap with
         # self.rotated_surface_code
-        block_shifted_no_overlap = Block(
-            stabilizers=(
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((1, 4, 0), (1, 5, 0), (0, 4, 0), (0, 5, 0)),
-                    ancilla_qubits=((1, 5, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[0].uuid,
-                ),
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((2, 5, 0), (2, 6, 0), (1, 5, 0), (1, 6, 0)),
-                    ancilla_qubits=((2, 6, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[1].uuid,
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((1, 5, 0), (0, 5, 0), (1, 6, 0), (0, 6, 0)),
-                    ancilla_qubits=((1, 6, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[2].uuid,
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((2, 4, 0), (1, 4, 0), (2, 5, 0), (1, 5, 0)),
-                    ancilla_qubits=((2, 5, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[3].uuid,
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((0, 4, 0), (0, 5, 0)),
-                    ancilla_qubits=((0, 5, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[4].uuid,
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((2, 5, 0), (2, 6, 0)),
-                    ancilla_qubits=((3, 6, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[5].uuid,
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((2, 4, 0), (1, 4, 0)),
-                    ancilla_qubits=((2, 4, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[6].uuid,
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((1, 6, 0), (0, 6, 0)),
-                    ancilla_qubits=((1, 7, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[7].uuid,
-                ),
-            ),
-            logical_x_operators=[
-                PauliOperator(
-                    pauli="XXX", data_qubits=((0, 4, 0), (1, 4, 0), (2, 4, 0))
-                )
-            ],
-            logical_z_operators=[
-                PauliOperator(
-                    pauli="ZZZ", data_qubits=((0, 4, 0), (0, 5, 0), (0, 6, 0))
-                )
-            ],
-            syndrome_circuits=self.rotated_surface_code.syndrome_circuits,
-            stabilizer_to_circuit=self.rotated_surface_code.stabilizer_to_circuit,
-            unique_label="q1",
-        )
+        block_shifted_no_overlap = rsc_block.shift((0, 4), new_label="q2")
 
-        combined_block = Block.from_blocks(
-            [self.rotated_surface_code, block_shifted_no_overlap]
-        )
+        combined_block = Block.from_blocks([rsc_block, block_shifted_no_overlap])
 
         # Check that the combined block has the same qubits and data qubits as the two
         # individual blocks
-        combined_qubits = set(self.rotated_surface_code.qubits) | set(
-            block_shifted_no_overlap.qubits
-        )
-        self.assertEqual(set(combined_block.qubits), combined_qubits)
-        combined_data_qubits = set(self.rotated_surface_code.data_qubits) | set(
+        combined_qubits = set(rsc_block.qubits) | set(block_shifted_no_overlap.qubits)
+
+        assert set(combined_block.qubits) == combined_qubits
+
+        combined_data_qubits = set(rsc_block.data_qubits) | set(
             block_shifted_no_overlap.data_qubits
         )
-        self.assertEqual(set(combined_block.data_qubits), combined_data_qubits)
+        assert set(combined_block.data_qubits) == combined_data_qubits
 
         # Check that if the two blocks overlap, an exception is raised
-        # block_shifted_overlap is shifted relative to self.rotated_surface_code by
-        # (1,2), so it overlaps with self.rotated_surface_code
-        block_shifted_overlap = Block(
-            stabilizers=(
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((2, 2, 0), (2, 3, 0), (1, 2, 0), (1, 3, 0)),
-                    ancilla_qubits=((2, 3, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[0].uuid,
-                ),
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((3, 3, 0), (3, 4, 0), (2, 3, 0), (2, 4, 0)),
-                    ancilla_qubits=((3, 4, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[1].uuid,
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((2, 3, 0), (1, 3, 0), (2, 4, 0), (1, 4, 0)),
-                    ancilla_qubits=((2, 4, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[2].uuid,
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((3, 2, 0), (2, 2, 0), (3, 3, 0), (2, 3, 0)),
-                    ancilla_qubits=((3, 3, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[3].uuid,
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((1, 2, 0), (1, 3, 0)),
-                    ancilla_qubits=((1, 3, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[4].uuid,
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((3, 3, 0), (3, 4, 0)),
-                    ancilla_qubits=((4, 4, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[5].uuid,
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((3, 2, 0), (2, 2, 0)),
-                    ancilla_qubits=((3, 2, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[6].uuid,
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((2, 4, 0), (1, 4, 0)),
-                    ancilla_qubits=((2, 5, 1),),
-                    uuid=self.rotated_surface_code.stabilizers[7].uuid,
-                ),
-            ),
-            logical_x_operators=[
-                PauliOperator(
-                    pauli="XXX", data_qubits=((1, 2, 0), (2, 2, 0), (3, 2, 0))
-                )
-            ],
-            logical_z_operators=[
-                PauliOperator(
-                    pauli="ZZZ", data_qubits=((1, 2, 0), (1, 3, 0), (1, 4, 0))
-                )
-            ],
-            syndrome_circuits=self.rotated_surface_code.syndrome_circuits,
-            stabilizer_to_circuit=self.rotated_surface_code.stabilizer_to_circuit,
-            unique_label="q3",
-        )
+        # block_shifted_overlap is shifted relative to rsc_block by
+        # (1,2), so it overlaps with rsc_block
+        block_shifted_overlap = rsc_block.shift((1, 2), new_label="q3")
 
-        with self.assertRaises(ValueError):
-            Block.from_blocks([self.rotated_surface_code, block_shifted_overlap])
+        with pytest.raises(ValueError):
+            Block.from_blocks([rsc_block, block_shifted_overlap])
 
         # And also if we use the same block twice
-        with self.assertRaises(ValueError):
-            Block.from_blocks([self.rotated_surface_code, self.rotated_surface_code])
+        with pytest.raises(ValueError):
+            Block.from_blocks([rsc_block, rsc_block])
 
-    def test_stabilizers_labels(self):
+    def test_stabilizers_labels(self, rsc_block):
         """Test the stabilizers_labels property."""
 
         expected_labels = {}
 
-        for stabilizer in self.rotated_surface_code.stabilizers:
+        for stabilizer in rsc_block.stabilizers:
             expected_labels[stabilizer.uuid] = {
                 "space_coordinates": stabilizer.ancilla_qubits[0]
             }
 
-        self.assertEqual(self.rotated_surface_code.stabilizers_labels, expected_labels)
+        assert rsc_block.stabilizers_labels == expected_labels
 
-    def test_get_stabilizer_label(self):
+    def test_get_stabilizer_label(self, rsc_block):
         """Test the correct extraction of a single stabilizer label."""
 
-        for stabilizer in self.rotated_surface_code.stabilizers:
+        for stabilizer in rsc_block.stabilizers:
             expected_label = {"space_coordinates": stabilizer.ancilla_qubits[0]}
-            label = self.rotated_surface_code.get_stabilizer_label(stabilizer.uuid)
-            self.assertEqual(label, expected_label)
+            label = rsc_block.get_stabilizer_label(stabilizer.uuid)
+            assert label == expected_label
 
-    def test_parity_check_matrix(self):
+    def test_parity_check_matrix(self, steane_code_parity_matrix, steane_block):
         """Test the parity_check_matrix property."""
+        assert steane_block.parity_check_matrix == steane_code_parity_matrix
 
-        # EXAMPLE 1: Steane code
-        pcm_steane = ParityCheckMatrix(self.h_steane)
-
-        # EXAMPLE 2: Shor code
-        pcm_shor = ParityCheckMatrix(self.h_shor)
-
-        # Verify validity
-        block_list = [self.steane_block, self.shor_block]
-        pcm_list = [pcm_steane, pcm_shor]
-
-        for block, correct_pcm in zip(block_list, pcm_list, strict=True):
-            pcm = block.parity_check_matrix
-
-            # Check equality with manually created parity-check matrix
-            self.assertEqual(pcm, correct_pcm)
-
-    def test_tanner_graph(self):
+    def test_tanner_graph(self, steane_code_tanner_graph, steane_block):
         """Test the tanner_graph property."""
-
-        # EXAMPLE 1: Steane code
-        tanner_steane = TannerGraph(self.g_steane)
-
-        # EXAMPLE 2: Shor code
-        tanner_shor = TannerGraph(self.g_shor)
-
-        # Verify validity
-        block_list = [self.steane_block, self.shor_block]
-        tanner_list = [tanner_steane, tanner_shor]
-
-        for block, correct_tanner_graph in zip(block_list, tanner_list, strict=True):
-            tanner_graph = block.tanner_graph
-
-            # Check equality with manually created tanner graph
-            self.assertEqual(tanner_graph, correct_tanner_graph)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert steane_block.tanner_graph == steane_code_tanner_graph

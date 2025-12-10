@@ -15,7 +15,6 @@ limitations under the License.
 
 """
 
-# pylint: disable=duplicate-code
 from loom.eka import Circuit
 from loom.interpreter import InterpretationStep
 
@@ -40,6 +39,19 @@ def y_wall_out_final_qec_rounds(
     This operation performs d-2 rounds of syndrome measurement on the block in such
     a way that the final circuit is fault-tolerant.
 
+    - A.) Begin composite operation for potentially multiple rounds
+
+    - B.) Circuit generation
+        - B.1) Generate ancilla initialization circuit
+        - B.2) Generate CNOT circuit
+        - B.3) Generate measurement circuit and classical bits
+        - B.4) Assemble and append circuit
+
+    - C.) Syndrome and detector generation
+        - C.1) Generate and append block syndromes and detectors
+
+    - D.) End the composite operation and append the circuit
+
     Parameters
     ----------
     interpretation_step : InterpretationStep
@@ -58,16 +70,22 @@ def y_wall_out_final_qec_rounds(
         The updated interpretation step.
     """
 
-    # Begin composite operation / multiple rounds of measurement
-    init_circ_len = len(interpretation_step.intermediate_circuit_sequence)
-
+    # Run d-2 rounds of syndrome measurement
     distance = min(block.size)
     n_total_rounds = distance - 2
 
-    # Run d-2 rounds of syndrome measurement
+    # A) Begin composite operation for potentially multiple rounds
+    interpretation_step.begin_composite_operation_session_MUT(
+        same_timeslice=same_timeslice,
+        circuit_name=(
+            f"final {n_total_rounds} syndrome measurement round(s) "
+            f"on block {block.unique_label}"
+        ),
+    )
+
     for _ in range(n_total_rounds):
-        # A) CIRCUIT GENERATION
-        # A.1) Generate ancilla initialization circuit
+        # B) Circuit generation
+        # B.1) Generate ancilla initialization circuit
         final_block_syndrome_measurement_reset_circuit = Circuit(
             name="Initialization of syndrome measurement ancilla",
             circuit=[
@@ -83,14 +101,14 @@ def y_wall_out_final_qec_rounds(
             ],
         )
 
-        # A.2) Generate CNOT circuit
+        # B.2) Generate CNOT circuit
         final_block_syndrome_measurement_cnot_circuit = (
             get_final_block_syndrome_measurement_cnots_circuit(
                 block, interpretation_step
             )
         )
 
-        # A.3) Generate measurement circuit and classical bits
+        # B.3) Generate measurement circuit and classical bits
         final_block_syndrome_measurement_measure_circuit, final_block_meas_cbits = (
             generate_syndrome_measurement_circuit_and_cbits(
                 interpretation_step,
@@ -98,7 +116,7 @@ def y_wall_out_final_qec_rounds(
             )
         )
 
-        # A.4) Assemble and append circuit
+        # B.4) Assemble and append circuit
         interpretation_step.append_circuit_MUT(
             Circuit(
                 name="one round of final syndrome measurement",
@@ -113,30 +131,13 @@ def y_wall_out_final_qec_rounds(
             same_timeslice=False,
         )
 
-        # B) SYNDROME AND DETECTOR GENERATION
-        # B.1) Generate and append syndromes and detectors
+        # C) Syndrome and detector generation
         generate_and_append_block_syndromes_and_detectors(
             interpretation_step, block, final_block_meas_cbits
         )
 
-    # C) WRAP MULTI-ROUND CIRCUIT AND APPEND
-    new_len = len(interpretation_step.intermediate_circuit_sequence)
-    len_op = new_len - init_circ_len
-    circuit_seq = interpretation_step.pop_intermediate_circuit_MUT(len_op)
-    wrapped_circuit_seq = ()
-    for timeslice in circuit_seq:
-        timespan = max(composite_circuit.duration for composite_circuit in timeslice)
-        # Create a circuit with empty timeslices and align circuits
-        template_circ = (
-            tuple(composite_circuit for composite_circuit in timeslice),
-        ) + ((),) * (timespan - 1)
-        wrapped_circuit_seq += template_circ
-    wrapped_circuit = Circuit(
-        name=(
-            f"measure syndromes of block {block.unique_label} {n_total_rounds} times"
-        ),
-        circuit=wrapped_circuit_seq,
-    )
+    # D) End the composite operation and append the circuit
+    wrapped_circuit = interpretation_step.end_composite_operation_session_MUT()
     interpretation_step.append_circuit_MUT(wrapped_circuit, same_timeslice)
 
     return interpretation_step

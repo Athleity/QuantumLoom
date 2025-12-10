@@ -6,10 +6,10 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "loom"
+project = "el-loom"
 copyright = "2025, Entropica Labs Pte Ltd"
 author = "Entropica Labs Pte Ltd"
-# release = "0.1.0" # TODO uncomment later
+release = "0.3.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -35,7 +35,6 @@ autoclass_content = "both"
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-# html_theme = 'alabaster'
 html_theme = "sphinx_rtd_theme"
 html_logo = "_static/entropica_logo.svg"
 html_theme_options = {
@@ -65,3 +64,16 @@ mathjax3_config = {
 autodoc_default_options = {
     "exclude-members": "model_post_init",
 }
+
+
+# Add no-index for Converter class. Since this is a base class for all converters,
+# indexing it clutters the documentation search results, because the derived classes
+# inherit from it and redefine methods docstrings.
+def process_signature(app, what, name, obj, options, signature, return_annotation):
+    if what == "class" and name == "loom.executor.converter.Converter":
+        options["noindex"] = True
+    return (signature, return_annotation)
+
+
+def setup(app):
+    app.connect("autodoc-process-signature", process_signature)

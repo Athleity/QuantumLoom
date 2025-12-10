@@ -6,18 +6,18 @@ To achieve this, Loom comes packaged with converters that bridge our data repres
 
 Firstly, we have to interpret the :class:`~loom.eka.eka.Eka` object into an intermediate representation using the :func:`~loom.interpreter.interpreter.interpret_eka` function.
 After obtaining the interpreted representation, you can then convert it into a specific backend format using one of the available converters. 
-For instance, to convert to a Stim circuit, you can use the :class:`~loom.executor.eka_circuit_to_stim_converter.EkaCircuitToStimConverter` class.
+For instance, to convert to a Stim circuit, you can use the :class:`~loom.executor.eka_to_stim_converter.EkaToStimConverter` class.
 
 .. code-block:: python
 
     from loom.interpreter.interpreter import interpret_eka
-    from loom.executor.eka_circuit_to_stim_converter import EkaCircuitToStimConverter
+    from loom.executor import EkaToStimConverter
 
     eka_obj = Eka(...)
 
     interpreted_eka = interpret_eka(eka_obj)
 
-    converter = EkaCircuitToStimConverter()
+    converter = EkaToStimConverter()
     stim_circuit = converter.convert(interpreted_eka)
 
 The resultant ``stim_circuit`` can then be executed using the Stim library.

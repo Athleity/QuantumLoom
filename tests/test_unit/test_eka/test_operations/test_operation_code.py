@@ -15,7 +15,7 @@ limitations under the License.
 
 """
 
-import unittest
+import pytest
 
 
 from loom.eka.utilities import (
@@ -42,7 +42,7 @@ from loom.eka.operations import (
 
 
 # pylint: disable=protected-access
-class TestCodeOperation(unittest.TestCase):
+class TestCodeOperation:
     """
     Test the creation of the logical operator measurement and qubit reset
     operations.
@@ -53,17 +53,14 @@ class TestCodeOperation(unittest.TestCase):
         Test the creation of a logical X measurement operation"""
 
         meas_log_x = MeasureLogicalX(input_block_name="q1")
-        self.assertEqual(meas_log_x.input_block_name, "q1")
-        self.assertEqual(meas_log_x.logical_qubit, 0)
-        self.assertEqual(
-            meas_log_x.__class__.__name__,
-            "MeasureLogicalX",
-        )
-        self.assertEqual(meas_log_x._inputs, ("q1",))
-        self.assertEqual(meas_log_x._outputs, ("q1",))
+        assert meas_log_x.input_block_name == "q1"
+        assert meas_log_x.logical_qubit == 0
+        assert meas_log_x.__class__.__name__ == "MeasureLogicalX"
+        assert meas_log_x._inputs == ("q1",)
+        assert meas_log_x._outputs == ("q1",)
         # Test the loads/dumps both using the right class and the abstract base class
-        self.assertEqual(meas_log_x, loads(MeasureLogicalX, dumps(meas_log_x)))
-        self.assertEqual(meas_log_x, loads(Operation, dumps(meas_log_x)))
+        assert meas_log_x == loads(MeasureLogicalX, dumps(meas_log_x))
+        assert meas_log_x == loads(Operation, dumps(meas_log_x))
 
     def test_measure_logical_y(self):
         """
@@ -71,34 +68,28 @@ class TestCodeOperation(unittest.TestCase):
         """
 
         meas_log_y = MeasureLogicalY(input_block_name="q1")
-        self.assertEqual(meas_log_y.input_block_name, "q1")
-        self.assertEqual(meas_log_y.logical_qubit, 0)
-        self.assertEqual(
-            meas_log_y.__class__.__name__,
-            "MeasureLogicalY",
-        )
-        self.assertEqual(meas_log_y._inputs, ("q1",))
-        self.assertEqual(meas_log_y._outputs, ("q1",))
+        assert meas_log_y.input_block_name == "q1"
+        assert meas_log_y.logical_qubit == 0
+        assert meas_log_y.__class__.__name__ == "MeasureLogicalY"
+        assert meas_log_y._inputs == ("q1",)
+        assert meas_log_y._outputs == ("q1",)
         # Test the loads/dumps both using the right class and the abstract base class
-        self.assertEqual(meas_log_y, loads(MeasureLogicalY, dumps(meas_log_y)))
-        self.assertEqual(meas_log_y, loads(Operation, dumps(meas_log_y)))
+        assert meas_log_y == loads(MeasureLogicalY, dumps(meas_log_y))
+        assert meas_log_y == loads(Operation, dumps(meas_log_y))
 
     def test_measure_logical_z(self):
         """
         Test the creation of a logical Z measurement operation"""
 
         meas_log_z = MeasureLogicalZ(input_block_name="q1")
-        self.assertEqual(meas_log_z.input_block_name, "q1")
-        self.assertEqual(meas_log_z.logical_qubit, 0)
-        self.assertEqual(
-            meas_log_z.__class__.__name__,
-            "MeasureLogicalZ",
-        )
-        self.assertEqual(meas_log_z._inputs, ("q1",))
-        self.assertEqual(meas_log_z._outputs, ("q1",))
+        assert meas_log_z.input_block_name == "q1"
+        assert meas_log_z.logical_qubit == 0
+        assert meas_log_z.__class__.__name__ == "MeasureLogicalZ"
+        assert meas_log_z._inputs == ("q1",)
+        assert meas_log_z._outputs == ("q1",)
         # Test the loads/dumps both using the right class and the abstract base class
-        self.assertEqual(meas_log_z, loads(MeasureLogicalZ, dumps(meas_log_z)))
-        self.assertEqual(meas_log_z, loads(Operation, dumps(meas_log_z)))
+        assert meas_log_z == loads(MeasureLogicalZ, dumps(meas_log_z))
+        assert meas_log_z == loads(Operation, dumps(meas_log_z))
 
     def test_reset_all_data_qubits(self):
         """
@@ -107,17 +98,15 @@ class TestCodeOperation(unittest.TestCase):
         # Test the creation of a logical reset operation
         for state in SingleQubitPauliEigenstate:
             logical_reset = ResetAllDataQubits(input_block_name="q1", state=state)
-            self.assertEqual(logical_reset.input_block_name, "q1")
-            self.assertEqual(logical_reset.__class__.__name__, "ResetAllDataQubits")
-            self.assertEqual(logical_reset._inputs, ("q1",))
-            self.assertEqual(logical_reset._outputs, ("q1",))
-            self.assertEqual(logical_reset.state, state)
+            assert logical_reset.input_block_name == "q1"
+            assert logical_reset.__class__.__name__ == "ResetAllDataQubits"
+            assert logical_reset._inputs == ("q1",)
+            assert logical_reset._outputs == ("q1",)
+            assert logical_reset.state == state
             # Test the loads/dumps both using the right class and the abstract base
             # class
-            self.assertEqual(
-                logical_reset, loads(ResetAllDataQubits, dumps(logical_reset))
-            )
-            self.assertEqual(logical_reset, loads(Operation, dumps(logical_reset)))
+            assert logical_reset == loads(ResetAllDataQubits, dumps(logical_reset))
+            assert logical_reset == loads(Operation, dumps(logical_reset))
 
     def test_reset_all_ancilla_qubits(self):
         """
@@ -125,43 +114,41 @@ class TestCodeOperation(unittest.TestCase):
         # Test the ancilla reset operation
         for state in SingleQubitPauliEigenstate:
             ancilla_reset = ResetAllAncillaQubits(input_block_name="q1", state=state)
-            self.assertEqual(ancilla_reset.input_block_name, "q1")
-            self.assertEqual(ancilla_reset.__class__.__name__, "ResetAllAncillaQubits")
-            self.assertEqual(ancilla_reset._inputs, ("q1",))
-            self.assertEqual(ancilla_reset._outputs, ("q1",))
-            self.assertEqual(ancilla_reset.state, state)
+            assert ancilla_reset.input_block_name == "q1"
+            assert ancilla_reset.__class__.__name__ == "ResetAllAncillaQubits"
+            assert ancilla_reset._inputs == ("q1",)
+            assert ancilla_reset._outputs == ("q1",)
+            assert ancilla_reset.state == state
             # Test the loads/dumps both using the right class and the abstract base
             # class
-            self.assertEqual(
-                ancilla_reset, loads(ResetAllAncillaQubits, dumps(ancilla_reset))
-            )
-            self.assertEqual(ancilla_reset, loads(Operation, dumps(ancilla_reset)))
+            assert ancilla_reset == loads(ResetAllAncillaQubits, dumps(ancilla_reset))
+            assert ancilla_reset == loads(Operation, dumps(ancilla_reset))
 
     def test_grow(self):
         """Test the creation of a Grow operation"""
         grow = Grow(input_block_name="q1", direction=Direction.TOP, length=1)
-        self.assertEqual(grow.input_block_name, "q1")
-        self.assertEqual(grow.direction, Direction.TOP)
-        self.assertEqual(grow.length, 1)
-        self.assertEqual(grow.__class__.__name__, "Grow")
-        self.assertEqual(grow._inputs, ("q1",))
-        self.assertEqual(grow._outputs, ("q1",))
+        assert grow.input_block_name == "q1"
+        assert grow.direction == Direction.TOP
+        assert grow.length == 1
+        assert grow.__class__.__name__ == "Grow"
+        assert grow._inputs == ("q1",)
+        assert grow._outputs == ("q1",)
         # Test the loads/dumps both using the right class and the abstract base class
-        self.assertEqual(grow, loads(Grow, dumps(grow)))
-        self.assertEqual(grow, loads(Operation, dumps(grow)))
+        assert grow == loads(Grow, dumps(grow))
+        assert grow == loads(Operation, dumps(grow))
 
         # Test invalid length input
         err_msg_length = "length has to be larger than 0."
 
         invalid_lengths = [-1, 0]
         for invalid_length in invalid_lengths:
-            with self.assertRaises(ValueError) as cm:
+            with pytest.raises(ValueError) as cm:
                 grow = Grow(
                     input_block_name="q1",
                     direction=Direction.TOP,
                     length=invalid_length,
                 )
-            self.assertIn(err_msg_length, str(cm.exception))
+            assert err_msg_length in str(cm.value)
 
     def test_shrink(self):
         """Test the creation of a Shrink operation"""
@@ -171,28 +158,28 @@ class TestCodeOperation(unittest.TestCase):
             direction=Direction.TOP,
             length=1,
         )
-        self.assertEqual(shrink.input_block_name, "q1")
-        self.assertEqual(shrink.direction, Direction.TOP)
-        self.assertEqual(shrink.length, 1)
-        self.assertEqual(shrink.__class__.__name__, "Shrink")
-        self.assertEqual(shrink._inputs, ("q1",))
-        self.assertEqual(shrink._outputs, ("q1",))
+        assert shrink.input_block_name == "q1"
+        assert shrink.direction == Direction.TOP
+        assert shrink.length == 1
+        assert shrink.__class__.__name__ == "Shrink"
+        assert shrink._inputs == ("q1",)
+        assert shrink._outputs == ("q1",)
         # Test the loads/dumps both using the right class and the abstract base class
-        self.assertEqual(shrink, loads(Shrink, dumps(shrink)))
-        self.assertEqual(shrink, loads(Operation, dumps(shrink)))
+        assert shrink == loads(Shrink, dumps(shrink))
+        assert shrink == loads(Operation, dumps(shrink))
 
         # Test invalid length input
         err_msg_length = "length has to be larger than 0."
 
         invalid_lengths = [-1, 0]
         for invalid_length in invalid_lengths:
-            with self.assertRaises(ValueError) as cm:
+            with pytest.raises(ValueError) as cm:
                 shrink = Shrink(
                     input_block_name="q1",
                     direction=Direction.TOP,
                     length=invalid_length,
                 )
-            self.assertIn(err_msg_length, str(cm.exception))
+            assert err_msg_length in str(cm.value)
 
     def test_merge(self):
         """Test the creation of a Merge operation"""
@@ -202,15 +189,15 @@ class TestCodeOperation(unittest.TestCase):
             output_block_name="q3",
             orientation=Orientation.HORIZONTAL,
         )
-        self.assertEqual(merge.input_blocks_name, ("q1", "q2"))
-        self.assertEqual(merge.output_block_name, "q3")
-        self.assertEqual(merge.orientation, Orientation.HORIZONTAL)
-        self.assertEqual(merge.__class__.__name__, "Merge")
-        self.assertEqual(merge._inputs, ("q1", "q2"))
-        self.assertEqual(merge._outputs, ("q3",))
+        assert merge.input_blocks_name == ("q1", "q2")
+        assert merge.output_block_name == "q3"
+        assert merge.orientation == Orientation.HORIZONTAL
+        assert merge.__class__.__name__ == "Merge"
+        assert merge._inputs == ("q1", "q2")
+        assert merge._outputs == ("q3",)
         # Test the loads/dumps both using the right class and the abstract base class
-        self.assertEqual(merge, loads(Merge, dumps(merge)))
-        self.assertEqual(merge, loads(Operation, dumps(merge)))
+        assert merge == loads(Merge, dumps(merge))
+        assert merge == loads(Operation, dumps(merge))
 
     def test_split(self):
         """Test the creation of a Split operation"""
@@ -221,28 +208,28 @@ class TestCodeOperation(unittest.TestCase):
             orientation=Orientation.VERTICAL,
             split_position=3,
         )
-        self.assertEqual(split.input_block_name, "q1")
-        self.assertEqual(split.output_blocks_name, ("q2", "q3"))
-        self.assertEqual(split.orientation, Orientation.VERTICAL)
-        self.assertEqual(split.split_position, 3)
-        self.assertEqual(split.__class__.__name__, "Split")
-        self.assertEqual(split._inputs, ("q1",))
-        self.assertEqual(split._outputs, ("q2", "q3"))
+        assert split.input_block_name == "q1"
+        assert split.output_blocks_name == ("q2", "q3")
+        assert split.orientation == Orientation.VERTICAL
+        assert split.split_position == 3
+        assert split.__class__.__name__ == "Split"
+        assert split._inputs == ("q1",)
+        assert split._outputs == ("q2", "q3")
         # Test the loads/dumps both using the right class and the abstract base class
-        self.assertEqual(split, loads(Split, dumps(split)))
-        self.assertEqual(split, loads(Operation, dumps(split)))
+        assert split == loads(Split, dumps(split))
+        assert split == loads(Operation, dumps(split))
 
         # Test invalid creation of split
         err_msg_split_position = "split_position has to be larger than 0."
 
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as cm:
             Split(
                 input_block_name="q1",
                 output_blocks_name=["q2", "q3"],
                 orientation=Orientation.VERTICAL,
                 split_position=-1,
             )
-        self.assertIn(err_msg_split_position, str(cm.exception))
+        assert err_msg_split_position in str(cm.value)
 
     def test_state_injection(self):
         """Test the creation of a state injection operation"""
@@ -251,17 +238,11 @@ class TestCodeOperation(unittest.TestCase):
             state_injection = StateInjection(
                 input_block_name="q1", resource_state=state
             )
-            self.assertEqual(state_injection.input_block_name, "q1")
-            self.assertEqual(state_injection.__class__.__name__, "StateInjection")
-            self.assertEqual(state_injection._inputs, ("q1",))
-            self.assertEqual(state_injection._outputs, ("q1",))
-            self.assertEqual(state_injection.resource_state, state)
+            assert state_injection.input_block_name == "q1"
+            assert state_injection.__class__.__name__ == "StateInjection"
+            assert state_injection._inputs == ("q1",)
+            assert state_injection._outputs == ("q1",)
+            assert state_injection.resource_state == state
             # Test the loads/dumps using the right class and the abstract base class
-            self.assertEqual(
-                state_injection, loads(StateInjection, dumps(state_injection))
-            )
-            self.assertEqual(state_injection, loads(Operation, dumps(state_injection)))
-
-
-if __name__ == "__main__":
-    unittest.main()
+            assert state_injection == loads(StateInjection, dumps(state_injection))
+            assert state_injection == loads(Operation, dumps(state_injection))

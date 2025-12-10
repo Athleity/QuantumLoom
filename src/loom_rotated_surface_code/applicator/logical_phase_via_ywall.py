@@ -15,7 +15,6 @@ limitations under the License.
 
 """
 
-from loom.eka import Circuit
 from loom.interpreter.applicator.code_applicator import measureblocksyndromes
 from loom.eka.operations import Grow, Shrink, MeasureBlockSyndromes
 from loom.interpreter.interpretation_step import InterpretationStep
@@ -40,18 +39,18 @@ def logical_phase_via_ywall(
     Apply the logical phase via y-wall operation.
     The algorithm is the following:
 
-    - A.) Run consistency checks
-    - B.) Relocate the x logical operator to the appropriate position
-    - C.) Grow the block
-    - D.) Move a corner to prepare for the y-wall operation
-    - E.) Measure the syndromes
-    - F.) Apply the y_wall_out operation
-    - G.) Move all topological corners back to their geometric positions and \
+    - A) Begin LogicalPhaseViaYwall composite operation session
+    - B) Run consistency checks
+    - C) Relocate the x logical operator to the appropriate position
+    - D) Grow the block
+    - E) Move a corner to prepare for the y-wall operation
+    - F) Measure the syndromes
+    - G) Apply the y_wall_out operation
+    - H) Move all topological corners back to their geometric positions and \
     potentially grow the block towards the initial position
-    - H.) Shrink the block
-    - I.) Relocate the x logical operator to the initial position
-    - J.) Wrap the circuit in a single circuit with the correct duration and empty \
-    timeslices
+    - I) Shrink the block
+    - J) Relocate the x logical operator to the initial position
+    - K) End the composite operation session and append the circuit
 
     Note that whenever the logical operator is moved, there may be some extra cycles of
     measurement of the block syndromes if there are missing syndromes.
@@ -72,7 +71,17 @@ def logical_phase_via_ywall(
     InterpretationStep
         The updated interpretation step after applying the operation.
     """
-    ## A) Run consistency checks
+
+    # A) Begin LogicalPhaseViaYwall composite operation session
+    interpretation_step.begin_composite_operation_session_MUT(
+        same_timeslice=same_timeslice,
+        circuit_name=(
+            f"LogicalPhaseViaYwall on block {operation.input_block_name} "
+            f"towards the {operation.growth_direction.name}."
+        ),
+    )
+
+    # B) Run consistency checks
     # Check that the RotatedSurfaceCode block is square and has odd dimensions
     # Check that the topological corners coincide with the geometric corners
     # Store the initial block and the current block, initial_block is a reference that
@@ -81,7 +90,6 @@ def logical_phase_via_ywall(
     init_block = current_block = check_consistency(interpretation_step, operation)
 
     growth_direction = operation.growth_direction
-    init_circ_len = len(interpretation_step.intermediate_circuit_sequence)
     init_x_log_operator = init_block.logical_x_operators[0]
 
     # Extract operation parameters after the checks
@@ -93,7 +101,7 @@ def logical_phase_via_ywall(
     is_top_left_bulk_stab_x = is_growth_towards_negative ^ is_init_top_left_bulk_stab_x
     is_x_boundary_horizontal = init_block.x_boundary == Orientation.HORIZONTAL
 
-    ## B) Relocate the x logical operator to the appropriate position
+    # C) Relocate the x logical operator to the appropriate position
     # Depending on the top-left bulk stabilizer and the x boundary orientation,
     # the top-left qubit of the x logical operator needs to be moved to a
     # different position such that after the block is grown, the x logical operator
@@ -137,7 +145,7 @@ def logical_phase_via_ywall(
             interpretation_step, current_block, new_x_log_op_top_left_qubit, "X"
         )
 
-    ## C) Grow the block
+    # D) Grow the block
     # The block is grown to the right if the x boundary is horizontal and down if
     # the x boundary is vertical
     growth_length = distance
@@ -169,7 +177,7 @@ def logical_phase_via_ywall(
             pauli="Z",
         )
 
-    ## D) Move the corner to prepare for the y-wall operation
+    # E) Move the corner to prepare for the y-wall operation
     # Depending on the top-left bulk stabilizer and the x boundary orientation,
     # a different corner qubit needs to be moved to prepare for the y-wall operation.
     current_block: RotatedSurfaceCode = interpretation_step.get_block(
@@ -205,7 +213,7 @@ def logical_phase_via_ywall(
         debug_mode=debug_mode,
     )
 
-    ## E) Measure the syndromes
+    # F) Measure the syndromes
     # Measure the syndromes of the block such that the block is projected onto
     # the new stabilizers before the y-wall operation is applied.
     # Measure for distance - 1 since the move_corners operation has already measured
@@ -217,7 +225,7 @@ def logical_phase_via_ywall(
         debug_mode=debug_mode,
     )
 
-    ## F) Apply the y_wall_out operation
+    # G) Apply the y_wall_out operation
     # The y_wall_out operation is applied to implement the main part of the
     # logical phase via y-wall operation.
     wall_position = distance
@@ -233,7 +241,7 @@ def logical_phase_via_ywall(
         debug_mode=debug_mode,
     )
 
-    ## G) Move all topological corners back to their geometric positions and
+    # H) Move all topological corners back to their geometric positions and
     ## potentially grow the block towards the initial position
     # Move the topological corners back to their geometric positions
     current_block = interpretation_step.get_block(init_block.unique_label)
@@ -320,7 +328,7 @@ def logical_phase_via_ywall(
             debug_mode=debug_mode,
         )
 
-    ## H) Shrink the block
+    # I) Shrink the block
     # The block is shrunk to the original size. Since the y_wall_out operation
     # shrunk the block by 1, the block needs to be shrunk by 1 unit less than the
     # growth operation.
@@ -342,7 +350,7 @@ def logical_phase_via_ywall(
         debug_mode=debug_mode,
     )
 
-    ## I) Relocate the x logical operator to the initial position
+    # J) Relocate the x logical operator to the initial position
     # The x logical operator is moved back to its original position.
     current_block = interpretation_step.get_block(init_block.unique_label)
     # Find the top-left corner of the initial x logical operator
@@ -356,29 +364,9 @@ def logical_phase_via_ywall(
         interpretation_step, current_block, final_x_log_op_top_left_qubit, "X"
     )
 
-    ## J) Wrap the circuit in a single circuit with the correct duration and empty
-    # timeslices
-    new_len = len(interpretation_step.intermediate_circuit_sequence)
-    len_ywall_phase_circ = new_len - init_circ_len
-    circuit_seq = interpretation_step.pop_intermediate_circuit_MUT(len_ywall_phase_circ)
-
-    wrapped_circuit_seq = ()
-    for timeslice in circuit_seq:
-        timespan = max(composite_circuit.duration for composite_circuit in timeslice)
-        # Create a circuit with empty timeslices and align circuits
-        template_circ = (
-            tuple(composite_circuit for composite_circuit in timeslice),
-        ) + ((),) * (timespan - 1)
-        wrapped_circuit_seq += template_circ
-
-    wrapped_circuit = Circuit(
-        name=(
-            f"LogicalPhaseViaYwall on block {init_block.unique_label} "
-            f"towards the {growth_direction.name}."
-        ),
-        circuit=wrapped_circuit_seq,
-    )
-    interpretation_step.append_circuit_MUT(wrapped_circuit, same_timeslice)
+    # K) End the operation session and append the circuit
+    logical_phase_circuit = interpretation_step.end_composite_operation_session_MUT()
+    interpretation_step.append_circuit_MUT(logical_phase_circuit, same_timeslice)
 
     return interpretation_step
 

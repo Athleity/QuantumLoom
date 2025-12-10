@@ -15,7 +15,7 @@ limitations under the License.
 
 """
 
-import unittest
+import pytest
 from loom.eka.utilities.enums import (
     Direction,
     Orientation,
@@ -24,7 +24,7 @@ from loom.eka.utilities.enums import (
 )
 
 
-class TestEnums(unittest.TestCase):
+class TestEnums:
     """Test cases for enums in eka.utilities.enums module."""
 
     def test_validation_of_direction(self):
@@ -50,9 +50,9 @@ class TestEnums(unittest.TestCase):
             "allowed as an input: left, right, top, bottom."
         )
         for direction in not_allowed_values:
-            with self.assertRaises(ValueError) as cm:
+            with pytest.raises(ValueError) as cm:
                 Direction(direction)
-            self.assertIn(err_msg, str(cm.exception))
+            assert err_msg in str(cm.value)
 
     def test_direction_to_orientation(self):
         """Test whether the direction enum is converted to the correct orientation."""
@@ -67,10 +67,8 @@ class TestEnums(unittest.TestCase):
         for direction in Direction:
             expected_orientation = direction_to_orientation_mapping.get(direction)
             # Test the conversion from direction to orientation
-            self.assertEqual(
-                Orientation.from_direction(direction), expected_orientation
-            )
-            self.assertEqual(direction.to_orientation(), expected_orientation)
+            assert Orientation.from_direction(direction) == expected_orientation
+            assert direction.to_orientation() == expected_orientation
 
     def test_resource_state_creation(self):
         """Test whether the resource state enum is validated correctly."""
@@ -87,9 +85,9 @@ class TestEnums(unittest.TestCase):
                 f"`{state}` is an invalid input for enum `ResourceState`. Only the "
                 "following values are allowed as an input: t, s."
             )
-            with self.assertRaises(ValueError) as cm:
+            with pytest.raises(ValueError) as cm:
                 ResourceState(state)
-            self.assertIn(err_msg, str(cm.exception))
+            assert err_msg in str(cm.value)
 
     def test_mirror_of_direction(self):
         """Test whether the mirror of a direction is returned correctly."""
@@ -117,8 +115,8 @@ class TestEnums(unittest.TestCase):
             for orientation in Orientation:
                 expected_mirror = expected_mirror_dict[direction][orientation]
                 # Test the mirror method
-                self.assertEqual(
-                    direction.mirror_across_orientation(orientation), expected_mirror
+                assert (
+                    direction.mirror_across_orientation(orientation) == expected_mirror
                 )
 
     def test_diagonal_mirror_of_direction(self):
@@ -147,9 +145,9 @@ class TestEnums(unittest.TestCase):
             for orientation in Orientation:
                 expected_mirror = expected_mirror_dict[diagonal_direction][orientation]
                 # Test the mirror method
-                self.assertEqual(
-                    diagonal_direction.mirror_across_orientation(orientation),
-                    expected_mirror,
+                assert (
+                    diagonal_direction.mirror_across_orientation(orientation)
+                    == expected_mirror
                 )
 
     def test_direction_along_orientation(self):
@@ -178,11 +176,6 @@ class TestEnums(unittest.TestCase):
             for orientation in Orientation:
                 expected_direction = expected_direction_dict[diag][orientation]
                 # Test the direction method
-                self.assertEqual(
-                    diag.direction_along_orientation(orientation),
-                    expected_direction,
+                assert (
+                    diag.direction_along_orientation(orientation) == expected_direction
                 )
-
-
-if __name__ == "__main__":
-    unittest.main()

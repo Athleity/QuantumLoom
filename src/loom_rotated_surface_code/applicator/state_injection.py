@@ -29,8 +29,7 @@ from loom.eka.operations import MeasureBlockSyndromes, StateInjection
 from ..code_factory import RotatedSurfaceCode
 
 
-# pylint: disable=duplicate-code
-def state_injection(  # pylint: disable=too-many-locals
+def state_injection(
     interpretation_step: InterpretationStep,
     operation: StateInjection,
     same_timeslice: bool,
@@ -49,33 +48,29 @@ def state_injection(  # pylint: disable=too-many-locals
 
     The algorithm is the following:
 
-    - A.) CIRCUIT
-    
-        - A.1) Resets the central qubit in a physical T state.
-        - A.2) Resets the rest of the data qubits into four quadrants, such that two \
+    - A.) Begin StateInjection composite operation session
+
+    - B.) Circuit
+        - B.1) Resets the central qubit in a physical T state.
+        - B.2) Resets the rest of the data qubits into four quadrants, such that two \
         quadrants are in the $|0⟩$ state and two quadrants are in the $|+⟩$ state.
             
-    - B.) LOGICAL OPERATORS
-    
-        - B.1) Displace the logical operators to the center of the block.
+    - C.) Logical Operators
+        - C.1) Displace the logical operators to the center of the block.
         
-    - C.) SYNDROMES
-    
-        - C.1) Creates syndromes for the block after the T state injection. Only \
+    - D.) Syndromes
+        - D.1) Creates syndromes for the block after the T state injection. Only \
         the stabilizers that are deterministic generate syndromes.
             
-    - D.) MEASURE BLOCK SYNDROMES
-    
-        - D.1) Measure the block syndromes.
+    - E.) Measure Block Syndromes
+        - E.1) Measure the block syndromes.
         
-    - E.) DISPLACE LOGICAL OPERATORS
-    
-        - E.1) Create the new logical operators on the top-left corner of the block.
+    - F.) Displace Logical Operators
+        - F.1) Create the new logical operators on the top-left corner of the block.
         
-    - F.) WRAP THE CIRCUIT
-    
-        - F.1) Wrap the state injection circuit in a single circuit with the correct \
-        duration and empty timeslices.
+    - G.) Final Circuit
+        - G.1) End the composite operation session and append the full state injection \
+        circuit
 
     Parameters
     ----------
@@ -92,7 +87,15 @@ def state_injection(  # pylint: disable=too-many-locals
         - Disabling the commutation validation of Block
     """
     input_block = interpretation_step.get_block(operation.input_block_name)
-    init_circ_len = len(interpretation_step.intermediate_circuit_sequence)
+
+    # A) Begin composite operation session
+    interpretation_step.begin_composite_operation_session_MUT(
+        same_timeslice=same_timeslice,
+        circuit_name=(
+            f"Inject {operation.resource_state.value} into block "
+            f"{input_block.unique_label} and measure syndromes"
+        ),
+    )
 
     if not isinstance(input_block, RotatedSurfaceCode):
         raise TypeError(
@@ -104,8 +107,8 @@ def state_injection(  # pylint: disable=too-many-locals
             f"Expected input_block.size to be all odd, but got {input_block.size}."
         )
 
-    # A) CIRCUIT
-    #   A.1) Resets the central qubit in a physical resource state.
+    # B) Circuit
+    #   B.1) Resets the central qubit in a physical resource state.
     qubit_to_reset = (
         input_block.upper_left_qubit[0] + input_block.size[0] // 2,
         input_block.upper_left_qubit[1] + input_block.size[1] // 2,
@@ -115,7 +118,7 @@ def state_injection(  # pylint: disable=too-many-locals
         interpretation_step, input_block, qubit_to_reset, operation.resource_state
     )
 
-    #   A.2) Resets the rest of the data qubits into four quadrants
+    #   B.2) Resets the rest of the data qubits into four quadrants
     reset_circuit, deterministic_stabs = reset_into_four_quadrants(
         interpretation_step,
         input_block,
@@ -133,8 +136,8 @@ def state_injection(  # pylint: disable=too-many-locals
         same_timeslice=False,  # Prevent the same timeslice flag from being set
     )
 
-    # B) LOGICAL OPERATORS
-    # Displace the logical operators to the center of the block.
+    # C) Logical Operators
+    # C.1) Displace the logical operators to the center of the block.
     centered_x_op, centered_z_op = find_centered_logical_operators(
         input_block=input_block, center_qubit=qubit_to_reset
     )
@@ -152,8 +155,8 @@ def state_injection(  # pylint: disable=too-many-locals
         new_blocks=(centered_block,), old_blocks=(input_block,)
     )
 
-    # C) SYNDROMES
-    # Create syndromes for the block after the state injection.
+    # D) Syndromes
+    # D.1) Create syndromes for the block after the state injection.
     deterministic_syndromes = create_deterministic_syndromes(
         interpretation_step=interpretation_step,
         block=centered_block,
@@ -161,7 +164,8 @@ def state_injection(  # pylint: disable=too-many-locals
     )
     interpretation_step.append_syndromes_MUT(syndromes=deterministic_syndromes)
 
-    # D) MEASURE BLOCK SYNDROMES
+    # E) Measure Block Syndromes
+    # E.1) Measure the block syndromes.
     interpretation_step = measureblocksyndromes(
         interpretation_step=interpretation_step,
         operation=MeasureBlockSyndromes(
@@ -171,8 +175,8 @@ def state_injection(  # pylint: disable=too-many-locals
         debug_mode=debug_mode,
     )
 
-    # E) DISPLACE LOGICAL OPERATORS
-    # Create the new logical operators
+    # F) Displace Logical Operators
+    # F.1) Create the new logical operators
     new_x_op, required_x_stabs = centered_block.get_shifted_equivalent_logical_operator(
         initial_operator=centered_block.logical_x_operators[0],
         new_upleft_qubit=centered_block.upper_left_qubit,
@@ -214,31 +218,11 @@ def state_injection(  # pylint: disable=too-many-locals
         inherit_updates=True,
     )
 
-    # F) WRAP THE CIRCUIT
-    new_len = len(interpretation_step.intermediate_circuit_sequence)
-    len_auxcnot = new_len - init_circ_len
-    circuit_seq = interpretation_step.pop_intermediate_circuit_MUT(len_auxcnot)
-
-    # Wrap the state injection circuit in a single circuit with the correct duration
-    # and empty timeslices
-    wrapped_circuit_seq = ()
-    for timeslice in circuit_seq:
-        timespan = max(composite_circuit.duration for composite_circuit in timeslice)
-        # Create a circuit with empty timeslices and align circuits
-        template_circ = (
-            tuple(composite_circuit for composite_circuit in timeslice),
-        ) + ((),) * (timespan - 1)
-        wrapped_circuit_seq += template_circ
-
-    wrapped_circuit = Circuit(
-        name=(
-            f"Inject {operation.resource_state.value} into block "
-            f"{input_block.unique_label} and measure syndromes"
-        ),
-        circuit=wrapped_circuit_seq,
-    )
-    # Append the wrapped circuit to the interpretation step with same_timeslice
-    interpretation_step.append_circuit_MUT(wrapped_circuit, same_timeslice)
+    # G) Final Circuit
+    # G.1) End the composite operation session and append the full state injection
+    # circuit
+    state_injection_circuit = interpretation_step.end_composite_operation_session_MUT()
+    interpretation_step.append_circuit_MUT(state_injection_circuit, same_timeslice)
 
     return interpretation_step
 

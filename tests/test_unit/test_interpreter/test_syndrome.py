@@ -15,12 +15,27 @@ limitations under the License.
 
 """
 
-import unittest
+# pylint: disable=redefined-outer-name, duplicate-code
+
+import pytest
 
 from loom.interpreter import Syndrome
 
 
-class TestSyndrome(unittest.TestCase):
+@pytest.fixture()
+def syndrome1_alt_labels():
+    """Fixture for a sample syndrome1 object with different labels."""
+    return Syndrome(
+        stabilizer="stab0",
+        measurements=(("c_(1,1,1)", 7),),
+        block="block0",
+        round=3,
+        corrections=(("c_(5, 8, 0)", 0),),
+        labels={"space_coordinate": (2, 5, 2), "time_coordinate": (4,), "color": 2},
+    )
+
+
+class TestSyndrome:
     """Tests for the Syndrome class."""
 
     def test_creation_syndrome(self):
@@ -51,133 +66,84 @@ class TestSyndrome(unittest.TestCase):
                 labels=syndrome_attributes["labels"][i],
             )
 
-            self.assertEqual(syndrome.stabilizer, syndrome_attributes["stab_uuid"][i])
-            self.assertEqual(
-                syndrome.measurements, syndrome_attributes["measurements"][i]
-            )
-            self.assertEqual(syndrome.block, syndrome_attributes["block"][i])
-            self.assertEqual(syndrome.round, syndrome_attributes["round"][i])
-            self.assertEqual(
-                syndrome.corrections, syndrome_attributes["corrections"][i]
-            )
-            self.assertEqual(syndrome.labels, syndrome_attributes["labels"][i])
+            assert syndrome.stabilizer == syndrome_attributes["stab_uuid"][i]
+            assert syndrome.measurements == syndrome_attributes["measurements"][i]
+            assert syndrome.block == syndrome_attributes["block"][i]
+            assert syndrome.round == syndrome_attributes["round"][i]
+            assert syndrome.corrections == syndrome_attributes["corrections"][i]
+            assert syndrome.labels == syndrome_attributes["labels"][i]
 
-    def test_syndrome_equality(self):
+    def test_syndrome_equality(self, syndrome_sample, syndrome1_alt_labels):
         """Test the equality method"""
 
-        syndrome1 = Syndrome(
-            stabilizer="stab0",
-            measurements=(("c_(1,1,1)", 7),),
-            block="block0",
-            round=3,
-            corrections=(("c_(5, 8, 0)", 0),),
-            labels={"space_coordinate": (1, 1, 1)},
-        )
-
-        syndrome2 = Syndrome(
-            stabilizer="stab0",
-            measurements=(("c_(1,1,1)", 7),),
-            block="block0",
-            round=3,
-            corrections=(("c_(5, 8, 0)", 0),),
-            labels={"space_coordinate": (2, 5, 2), "time_coordinate": (4,), "color": 2},
-        )
-
         # They are equal despite having different labels
-        self.assertEqual(syndrome1, syndrome2)
+        assert syndrome_sample == syndrome1_alt_labels
 
         # Test for inequality field by field
         syndrome3 = Syndrome(
             stabilizer="stab1",
-            measurements=syndrome1.measurements,
-            block=syndrome1.block,
-            round=syndrome1.round,
-            corrections=syndrome1.corrections,
+            measurements=syndrome_sample.measurements,
+            block=syndrome_sample.block,
+            round=syndrome_sample.round,
+            corrections=syndrome_sample.corrections,
             labels={},
         )
 
         syndrome4 = Syndrome(
-            stabilizer=syndrome1.stabilizer,
+            stabilizer=syndrome_sample.stabilizer,
             measurements=(("c_(1,1,2)", 7),),
-            block=syndrome1.block,
-            round=syndrome1.round,
-            corrections=syndrome1.corrections,
+            block=syndrome_sample.block,
+            round=syndrome_sample.round,
+            corrections=syndrome_sample.corrections,
             labels={},
         )
 
         syndrome5 = Syndrome(
-            stabilizer=syndrome1.stabilizer,
-            measurements=syndrome1.measurements,
+            stabilizer=syndrome_sample.stabilizer,
+            measurements=syndrome_sample.measurements,
             block="entropica_labs",
-            round=syndrome1.round,
-            corrections=syndrome1.corrections,
+            round=syndrome_sample.round,
+            corrections=syndrome_sample.corrections,
             labels={},
         )
 
         syndrome6 = Syndrome(
-            stabilizer=syndrome1.stabilizer,
-            measurements=syndrome1.measurements,
-            block=syndrome1.block,
+            stabilizer=syndrome_sample.stabilizer,
+            measurements=syndrome_sample.measurements,
+            block=syndrome_sample.block,
             round=334,
-            corrections=syndrome1.corrections,
+            corrections=syndrome_sample.corrections,
             labels={},
         )
 
         syndrome7 = Syndrome(
-            stabilizer=syndrome1.stabilizer,
-            measurements=syndrome1.measurements,
-            block=syndrome1.block,
-            round=syndrome1.round,
+            stabilizer=syndrome_sample.stabilizer,
+            measurements=syndrome_sample.measurements,
+            block=syndrome_sample.block,
+            round=syndrome_sample.round,
             corrections=(("c_(5, 8, 0)", 42),),
             labels={},
         )
 
         wrong_syndromes = [syndrome3, syndrome4, syndrome5, syndrome6, syndrome7]
         for wrong_syndrome in wrong_syndromes:
-            self.assertNotEqual(syndrome1, wrong_syndrome)
+            assert syndrome_sample != wrong_syndrome
 
-    def test_syndrome_repr(self):
+    def test_syndrome_repr(self, syndrome_sample):
         """Test the string representation of the Syndrome object"""
-
-        syndrome = Syndrome(
-            stabilizer="stab0",
-            measurements=(("c_(1,1,1)", 7),),
-            block="block0",
-            round=3,
-            corrections=(("c_(5, 8, 0)", 0),),
-            labels={"space_coordinate": (1, 1, 1)},
-        )
 
         expected_repr = (
             "Syndrome(Measurements: (('c_(1,1,1)', 7),), "
             "Corrections: (('c_(5, 8, 0)', 0),), Round: 3, "
             "Labels: {'space_coordinate': (1, 1, 1)})"
         )
-        self.assertEqual(repr(syndrome), expected_repr)
+        assert repr(syndrome_sample) == expected_repr
 
-    def test_syndrome_hash(self):
+    def test_syndrome_hash(self, syndrome_sample, syndrome1_alt_labels):
         """Test the proper hashing of the Syndrome object"""
 
-        syndrome1 = Syndrome(
-            stabilizer="stab0",
-            measurements=(("c_(1,1,1)", 7),),
-            block="block0",
-            round=3,
-            corrections=(("c_(5, 8, 0)", 0),),
-            labels={"space_coordinate": (1, 1, 1)},
-        )
-
-        syndrome2 = Syndrome(
-            stabilizer="stab0",
-            measurements=(("c_(1,1,1)", 7),),
-            block="block0",
-            round=3,
-            corrections=(("c_(5, 8, 0)", 0),),
-            labels={"time_coordinate": (9,)},
-        )
-
         # Check that two identical syndromes have the same hash
-        self.assertEqual(hash(syndrome1), hash(syndrome2))
+        assert hash(syndrome_sample) == hash(syndrome1_alt_labels)
 
         # Check that two different syndromes have different hashes
         syndrome3 = Syndrome(
@@ -188,8 +154,4 @@ class TestSyndrome(unittest.TestCase):
             corrections=(("c_(5, 8, 0)", 0),),
             labels={"space_coordinate": (2, 5, 2)},
         )
-        self.assertNotEqual(hash(syndrome1), hash(syndrome3))
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert hash(syndrome_sample) != hash(syndrome3)

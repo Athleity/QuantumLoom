@@ -44,7 +44,7 @@ pip install git+https://github.com/entropicalabs/el-loom.git
 
 ## 🚀 Quick Start
 
-Here's a simple example of a experiment designed with Eka. Have a look to the
+Here's a simple example of an experiment designed with Eka. Have a look to the
 [documentation]() for more information on the available features.
 
 ```python
@@ -56,7 +56,7 @@ from loom.eka.operations import (
     MeasureLogicalZ
 )
 from loom.interpreter import interpret_eka
-from loom.executor import EkaCircuitToStimConverter
+from loom.executor import EkaToStimConverter
 from loom_rotated_surface_code.code_factory import RotatedSurfaceCode
 
 lattice = Lattice.square_2d((15, 15))
@@ -83,7 +83,7 @@ eka_experiment = Eka(
 final_state = interpret_eka(eka_experiment)
 
 # Get the Stim code ready for simulation
-stim_circuit = EkaCircuitToStimConverter().convert(final_state)
+stim_circuit = EkaToStimConverter().convert(final_state)
 
 ```
 
@@ -105,7 +105,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 poetry install --with dev
 
 # Get the command to activate the virtual environment
-poetry env activate     # or run all command with "poetry run" prefix
+poetry env activate     # or run all commands with "poetry run" prefix
 
 # Run tests
 pytest

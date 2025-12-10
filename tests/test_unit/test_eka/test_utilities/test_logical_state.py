@@ -31,6 +31,8 @@ from loom.eka.utilities import (
     SignedPauliOp,
 )
 
+# pylint: disable=duplicate-code
+
 
 class TestLogicalState(unittest.TestCase):
     """Tests for the LogicalState class."""

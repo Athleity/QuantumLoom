@@ -15,82 +15,78 @@ limitations under the License.
 
 """
 
-# pylint: disable= duplicate-code
-import unittest
+import pytest
 
 from loom.interpreter import Detector, Syndrome
 
+# pylint: disable=redefined-outer-name, duplicate-code
 
-class TestDetector(unittest.TestCase):
+
+@pytest.fixture()
+def detector_sample_relabeled(detector_sample):
+    """Return the detector_sample with different label."""
+    return Detector(syndromes=detector_sample.syndromes, labels={"quantum": 42})
+
+
+@pytest.fixture()
+def different_detector_sample():
+    """Fixture for a different Detector object."""
+    s = Syndrome(
+        stabilizer="stab0",
+        measurements=(("c_(1,1,1)", 7),),
+        block="block0",
+        round=8,
+        corrections=(("c_(5, 8, 0)", 0),),
+        labels={"space_coordinate": (2, 5, 2)},
+    )
+
+    return Detector(syndromes=[s], labels={})
+
+
+class TestDetector:
     """Tests for the Detector class."""
 
-    def setUp(self):
-
-        self.syndrome1 = Syndrome(
-            stabilizer="stab0",
-            measurements=(("c_(1,1,1)", 7),),
-            block="block0",
-            round=3,
-            corrections=(("c_(5, 8, 0)", 0),),
-            labels={"space_coordinate": (1, 1, 1)},
-        )
-
-        self.syndrome2 = Syndrome(
-            stabilizer="stab0",
-            measurements=(("c_(1,1,1)", 8),),
-            block="block0",
-            round=4,
-            corrections=(),
-            labels={"time_coordinate": (9,)},
-        )
-
-        self.detector1 = Detector(
-            syndromes=[self.syndrome1, self.syndrome2], labels=self.syndrome2.labels
-        )
-        self.detector2 = Detector(
-            syndromes=[self.syndrome1, self.syndrome2], labels={"quantum": 42}
-        )
-
-        # Check that two different syndromes have different hashes
-        self.syndrome3 = Syndrome(
-            stabilizer="stab0",
-            measurements=(("c_(1,1,1)", 7),),
-            block="block0",
-            round=8,
-            corrections=(("c_(5, 8, 0)", 0),),
-            labels={"space_coordinate": (2, 5, 2)},
-        )
-
-        self.detector3 = Detector(syndromes=[self.syndrome3], labels={})
-
-    def test_creation_detector(self):
+    def test_creation_detector(
+        self,
+        detector_sample,
+        syndrome_sample,
+        syndrome_sample_next_round,
+        different_detector_sample,
+    ):
         """Tests the creation of a Detector object."""
 
-        self.assertIsInstance(self.detector1, Detector)
-        self.assertEqual(self.detector1.syndromes, (self.syndrome1, self.syndrome2))
-        self.assertEqual(self.detector1.labels, self.syndrome2.labels)
+        assert isinstance(detector_sample, Detector)
+        assert detector_sample.syndromes == (
+            syndrome_sample,
+            syndrome_sample_next_round,
+        )
+        assert detector_sample.labels == syndrome_sample_next_round.labels
 
-        self.assertIsInstance(self.detector3, Detector)
-        self.assertEqual(self.detector3.syndromes, (self.syndrome3,))
-        self.assertEqual(self.detector3.labels, {})
+        assert isinstance(different_detector_sample, Detector)
+        assert different_detector_sample.syndromes == (
+            different_detector_sample.syndromes[0],
+        )
+        assert different_detector_sample.labels == {}
 
-    def test_detector_equality(self):
+    def test_detector_equality(
+        self, detector_sample, detector_sample_relabeled, different_detector_sample
+    ):
         """Test the equality method"""
-        self.assertEqual(self.detector1, self.detector2)
-        self.assertNotEqual(self.detector1, self.detector3)
+        assert detector_sample == detector_sample_relabeled
+        assert detector_sample != different_detector_sample
 
-    def test_detector_rounds(self):
+    def test_detector_rounds(self, detector_sample, different_detector_sample):
         """Test the rounds property of Detector"""
-        self.assertEqual(self.detector1.rounds(), (3, 4))
-        self.assertEqual(self.detector3.rounds(), (8,))
+        assert detector_sample.rounds() == (3, 4)
+        assert different_detector_sample.rounds() == (8,)
 
-    def test_detector_stabilizer(self):
+    def test_detector_stabilizer(self, detector_sample, different_detector_sample):
         """Test the stabilizer property of the Detector object"""
 
-        self.assertEqual(self.detector1.stabilizer(), ("stab0", "stab0"))
-        self.assertEqual(self.detector3.stabilizer(), ("stab0",))
+        assert detector_sample.stabilizer() == ("stab0", "stab0")
+        assert different_detector_sample.stabilizer() == ("stab0",)
 
-    def test_detector_repr(self):
+    def test_detector_repr(self, detector_sample):
         """Test the string representation of the Detector object"""
 
         expected_repr = (
@@ -101,48 +97,33 @@ class TestDetector(unittest.TestCase):
             "Corrections: (), Round: 4, "
             "Labels: {'time_coordinate': (9,)})), Labels: {'time_coordinate': (9,)})"
         )
-        self.assertEqual(repr(self.detector1), expected_repr)
+        assert repr(detector_sample) == expected_repr
 
-    def test_detector_hash(self):
+    def test_detector_hash(
+        self,
+        syndrome_sample,
+        detector_sample,
+        different_detector_sample,
+    ):
         """Test the proper hashing of the Detector object"""
 
-        syndrome1 = Syndrome(
-            stabilizer="stab0",
-            measurements=(("c_(1,1,1)", 7),),
-            block="block0",
-            round=3,
-            corrections=(("c_(5, 8, 0)", 0),),
-            labels={"space_coordinate": (1, 1, 1)},
-        )
-
+        # Create a syndrome identical to syndrome_sample but with different labels
         syndrome2 = Syndrome(
-            stabilizer="stab0",
-            measurements=(("c_(1,1,1)", 7),),
-            block="block0",
-            round=3,
-            corrections=(("c_(5, 8, 0)", 0),),
+            syndrome_sample.stabilizer,
+            syndrome_sample.measurements,
+            block=syndrome_sample.block,
+            round=syndrome_sample.round,
+            corrections=syndrome_sample.corrections,
             labels={"time_coordinate": (9,)},
         )
 
-        detector1 = Detector(syndromes=[syndrome1, syndrome2], labels={})
-        detector2 = Detector(syndromes=[syndrome1, syndrome2], labels={"quantum": 42})
-
-        # Check that two identical syndromes have the same hash
-        self.assertEqual(hash(detector1), hash(detector2))
-
-        # Check that two different syndromes have different hashes
-        syndrome3 = Syndrome(
-            stabilizer="stab0",
-            measurements=(("c_(1,1,1)", 7),),
-            block="block0",
-            round=8,
-            corrections=(("c_(5, 8, 0)", 0),),
-            labels={"space_coordinate": (2, 5, 2)},
+        detector1 = Detector(syndromes=[syndrome_sample, syndrome2], labels={})
+        detector2 = Detector(
+            syndromes=[syndrome_sample, syndrome2], labels={"quantum": 42}
         )
 
-        detector3 = Detector(syndromes=[syndrome3], labels={})
-        self.assertNotEqual(hash(detector1), hash(detector3))
+        # Check that two identical syndromes have the same hash
+        assert hash(detector1) == hash(detector2)
 
-
-if __name__ == "__main__":
-    unittest.main()
+        # Check that two different syndromes have different hashes
+        assert hash(detector_sample) != hash(different_detector_sample)

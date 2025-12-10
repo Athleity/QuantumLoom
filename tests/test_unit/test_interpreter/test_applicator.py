@@ -15,10 +15,9 @@ limitations under the License.
 
 """
 
-import unittest
-import unittest.mock
 import itertools
-from copy import deepcopy
+
+import pytest
 
 from loom.eka import (
     Eka,
@@ -84,141 +83,80 @@ def return_custom_block(
     return input_block
 
 
-class TestApplicator(unittest.TestCase):
+class TestApplicator:
     """Tests for the Applicator classes."""
 
-    def setUp(self):
-        self.base_step = InterpretationStep()
-
-        self.square_2d_lattice = Lattice.square_2d((10, 20))
-        self.eka_no_blocks = Eka(self.square_2d_lattice)
-        self.rot_surf_code_1 = Block(
-            stabilizers=(
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((1, 0, 0), (1, 1, 0), (0, 0, 0), (0, 1, 0)),
-                    ancilla_qubits=((1, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((2, 1, 0), (2, 2, 0), (1, 1, 0), (1, 2, 0)),
-                    ancilla_qubits=((2, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((1, 1, 0), (0, 1, 0), (1, 2, 0), (0, 2, 0)),
-                    ancilla_qubits=((1, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((2, 0, 0), (1, 0, 0), (2, 1, 0), (1, 1, 0)),
-                    ancilla_qubits=((2, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((0, 0, 0), (0, 1, 0)),
-                    ancilla_qubits=((0, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((2, 1, 0), (2, 2, 0)),
-                    ancilla_qubits=((3, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((2, 0, 0), (1, 0, 0)),
-                    ancilla_qubits=((2, 0, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((1, 2, 0), (0, 2, 0)),
-                    ancilla_qubits=((1, 3, 1),),
-                ),
-            ),
-            logical_x_operators=[
-                PauliOperator(
-                    pauli="XXX", data_qubits=((0, 0, 0), (1, 0, 0), (2, 0, 0))
-                )
-            ],
-            logical_z_operators=[
-                PauliOperator(
-                    pauli="ZZZ", data_qubits=((0, 0, 0), (0, 1, 0), (0, 2, 0))
-                )
-            ],
-            unique_label="q1",
-        )
-        self.meas_block_op = MeasureBlockSyndromes(self.rot_surf_code_1.unique_label)
-
-    def test_applicator_return_method(self):
+    def test_applicator_return_method(self, n_rsc_block_factory, empty_eka):
         """
         Test that a BaseApplicator raises the right error when giving an unsupported
         operation.
         """
         # Should raise the right type of error.
-        applicator = BaseApplicator(self.eka_no_blocks)
+        applicator = BaseApplicator(empty_eka)
+        rsc_block = n_rsc_block_factory(1)[0]
 
-        with self.assertRaises(NotImplementedError) as cm:
+        with pytest.raises(NotImplementedError) as cm:
             applicator.apply(
-                deepcopy(self.base_step),
-                self.meas_block_op,
+                InterpretationStep(),
+                MeasureBlockSyndromes(rsc_block.unique_label),
                 same_timeslice=False,
                 debug_mode=True,
             )
         err_str = "Operation MeasureBlockSyndromes is not supported by BaseApplicator"
 
-        self.assertIn(err_str, str(cm.exception))
+        assert err_str in str(cm.value)
 
-    def test_applicator_not_mapped(self):
+    def test_applicator_not_mapped(self, mocker, empty_eka):
         """
         Test that the applicator raises a NotImplementedError if the operation is not
         included in the supported operations.
         """
         # Mock ReadObservable Operation
-        rand_op = unittest.mock.Mock(name="RandomOperation")
+        rand_op = mocker.Mock(name="RandomOperation")
         rand_op.__class__.__name__ = "RandomOperation"
 
         # Using BaseApplicator should raise a NotImplementedError.
-        base_applicator = BaseApplicator(self.eka_no_blocks)
-        with self.assertRaises(NotImplementedError) as cm:
+        base_applicator = BaseApplicator(empty_eka)
+        with pytest.raises(NotImplementedError) as cm:
             base_applicator.apply(
-                deepcopy(self.base_step), rand_op, same_timeslice=False, debug_mode=True
+                InterpretationStep(), rand_op, same_timeslice=False, debug_mode=True
             )
         err_str = "Operation RandomOperation is not supported by BaseApplicator"
-        self.assertIn(err_str, str(cm.exception))
+        assert err_str in str(cm.value)
 
         # Using CodeApplicator should raise a NotImplementedError.
-        code_applicator = CodeApplicator(self.eka_no_blocks)
-        with self.assertRaises(NotImplementedError) as cm:
+        code_applicator = CodeApplicator(empty_eka)
+        with pytest.raises(NotImplementedError) as cm:
             code_applicator.apply(
-                deepcopy(self.base_step), rand_op, same_timeslice=False, debug_mode=True
+                InterpretationStep(), rand_op, same_timeslice=False, debug_mode=True
             )
         err_str = "Operation RandomOperation is not supported by CodeApplicator"
-        self.assertIn(err_str, str(cm.exception))
+        assert err_str in str(cm.value)
 
-    def test_applicator_measurelogical_xyz(self):
+    def test_applicator_measurelogical_xyz(self, n_rsc_block_factory):
         """Test that the applicator creates the correct circuit, syndromes and
         logical observable for a MeasureLogicalX or MeasureLogicalZ operation.
         MeasureLogicalY is currently not supported. This is done for a standard Rotated
         Surface Code Block and for another one with displaced logical operators."""
-
+        rsc_block = n_rsc_block_factory(1)[0].rename("q1")
         logical_operators = {
             "q1": {
                 "X": (
-                    self.rot_surf_code_1.logical_x_operators[0],
-                    self.rot_surf_code_1.logical_z_operators[0],
+                    rsc_block.logical_x_operators[0],
+                    rsc_block.logical_z_operators[0],
                 ),
                 "Z": (
-                    self.rot_surf_code_1.logical_x_operators[0],
-                    self.rot_surf_code_1.logical_z_operators[0],
+                    rsc_block.logical_x_operators[0],
+                    rsc_block.logical_z_operators[0],
                 ),
             },
             "q2": {
                 "X": (
                     PauliOperator("X" * 3, [(0, 2, 0), (1, 2, 0), (2, 2, 0)]),
-                    self.rot_surf_code_1.logical_z_operators[0],
+                    rsc_block.logical_z_operators[0],
                 ),
                 "Z": (
-                    self.rot_surf_code_1.logical_x_operators[0],
+                    rsc_block.logical_x_operators[0],
                     PauliOperator("Z" * 3, [(2, 0, 0), (2, 1, 0), (2, 2, 0)]),
                 ),
             },
@@ -232,12 +170,12 @@ class TestApplicator(unittest.TestCase):
                     Channel(label=f"c_{q}_0", type="classical"),
                 ],
             )
-            for q in self.rot_surf_code_1.data_qubits
+            for q in rsc_block.data_qubits
         ]
 
         hadamard_layer = [
             Circuit("H", channels=Channel(label=f"{q}", type="quantum"))
-            for q in self.rot_surf_code_1.data_qubits
+            for q in rsc_block.data_qubits
         ]
 
         circuit_seq_x = [hadamard_layer] + [measurement_circuit]
@@ -262,53 +200,13 @@ class TestApplicator(unittest.TestCase):
         for basis, name in itertools.product(["X", "Z"], ["q1", "q2"]):
 
             measurement_op, circuit_seq, measured_log = properties[name][basis]
-
-            rsc_block = Block(
-                stabilizers=(
-                    Stabilizer(
-                        pauli="ZZZZ",
-                        data_qubits=((1, 0, 0), (1, 1, 0), (0, 0, 0), (0, 1, 0)),
-                        ancilla_qubits=((1, 1, 1),),
-                    ),
-                    Stabilizer(
-                        pauli="ZZZZ",
-                        data_qubits=((2, 1, 0), (2, 2, 0), (1, 1, 0), (1, 2, 0)),
-                        ancilla_qubits=((2, 2, 1),),
-                    ),
-                    Stabilizer(
-                        pauli="XXXX",
-                        data_qubits=((1, 1, 0), (0, 1, 0), (1, 2, 0), (0, 2, 0)),
-                        ancilla_qubits=((1, 2, 1),),
-                    ),
-                    Stabilizer(
-                        pauli="XXXX",
-                        data_qubits=((2, 0, 0), (1, 0, 0), (2, 1, 0), (1, 1, 0)),
-                        ancilla_qubits=((2, 1, 1),),
-                    ),
-                    Stabilizer(
-                        pauli="XX",
-                        data_qubits=((0, 0, 0), (0, 1, 0)),
-                        ancilla_qubits=((0, 1, 1),),
-                    ),
-                    Stabilizer(
-                        pauli="XX",
-                        data_qubits=((2, 1, 0), (2, 2, 0)),
-                        ancilla_qubits=((3, 2, 1),),
-                    ),
-                    Stabilizer(
-                        pauli="ZZ",
-                        data_qubits=((2, 0, 0), (1, 0, 0)),
-                        ancilla_qubits=((2, 0, 1),),
-                    ),
-                    Stabilizer(
-                        pauli="ZZ",
-                        data_qubits=((1, 2, 0), (0, 2, 0)),
-                        ancilla_qubits=((1, 3, 1),),
-                    ),
-                ),
-                logical_x_operators=[logical_operators[name][basis][0]],
-                logical_z_operators=[logical_operators[name][basis][1]],
-                unique_label=name,
+            rsc_block = n_rsc_block_factory(1)[0].rename(name)
+            # bypass immutability to simply create different blocks for testing
+            object.__setattr__(
+                rsc_block, "logical_x_operators", [logical_operators[name][basis][0]]
+            )
+            object.__setattr__(
+                rsc_block, "logical_z_operators", [logical_operators[name][basis][1]]
             )
 
             base_step = InterpretationStep(
@@ -324,10 +222,10 @@ class TestApplicator(unittest.TestCase):
             )
 
             # The Circuit has the right number of timesteps.
-            self.assertEqual(len(output_step.intermediate_circuit_sequence), 1)
-            self.assertEqual(
-                output_step.intermediate_circuit_sequence[0][0].circuit,
-                expected_circuit.circuit,
+            assert len(output_step.intermediate_circuit_sequence[0]) == 1
+            assert (
+                output_step.intermediate_circuit_sequence[0][0].circuit
+                == expected_circuit.circuit
             )
 
             # The output step has the right syndromes
@@ -348,30 +246,30 @@ class TestApplicator(unittest.TestCase):
                 )
                 if set(stab.pauli) == {basis}
             )
-            self.assertEqual(output_step.syndromes, expected_syndromes)
+            assert output_step.syndromes == expected_syndromes
 
             expected_observable = LogicalObservable(
                 label=f"{name}_{basis}_0",
                 measurements=[(f"c_{qubit}", 0) for qubit in measured_log.data_qubits],
             )
-            self.assertEqual(output_step.logical_observables[0], expected_observable)
+            assert output_step.logical_observables[0] == expected_observable
 
             ## Check for wrong input
             y_op = MeasureLogicalY(rsc_block.unique_label)
             err_msg = "Logical measurement in Y basis is not supported"
-            with self.assertRaises(ValueError) as cm:
+            with pytest.raises(ValueError) as cm:
                 _ = measurelogicalpauli(base_step, y_op, False, False)
-            self.assertEqual(str(cm.exception), err_msg)
+            assert str(cm.value) == err_msg
 
             wrong_op = LogicalZ(rsc_block.unique_label)
             err_msg = f"Operation {wrong_op.__class__.__name__} not supported"
-            with self.assertRaises(ValueError) as cm:
+            with pytest.raises(ValueError) as cm:
                 _ = measurelogicalpauli(base_step, wrong_op, False, False)
-            self.assertEqual(str(cm.exception), err_msg)
+            assert str(cm.value) == err_msg
 
-    def test_logical_reset(self):
+    def test_logical_reset(self, n_rsc_block_factory):
         """Test that the applicator correctly applies the logical reset operation."""
-        rsc_block = self.rot_surf_code_1
+        rsc_block = n_rsc_block_factory(1)[0]
         rsc_qubit_channels = {
             qub: Channel(label=str(qub)) for qub in rsc_block.data_qubits
         }
@@ -392,9 +290,9 @@ class TestApplicator(unittest.TestCase):
             output_circ = output_step.intermediate_circuit_sequence[0][0]
 
             # Check that the block's uuid is changed but the block is equivalent
-            new_block = output_step.get_block(self.rot_surf_code_1.unique_label)
-            self.assertEqual(new_block, self.rot_surf_code_1)
-            self.assertNotEqual(new_block.uuid, self.rot_surf_code_1.uuid)
+            new_block = output_step.get_block(rsc_block.unique_label)
+            assert new_block == rsc_block
+            assert new_block.uuid != rsc_block.uuid
 
             # Create the expected circuit
             expected_circ = Circuit(
@@ -408,9 +306,9 @@ class TestApplicator(unittest.TestCase):
             )
 
             # Check that the circuits are the same
-            self.assertEqual(output_circ, expected_circ)
+            assert output_circ == expected_circ
             # Check that all the reset operations are done in the same timestep
-            self.assertEqual(output_circ.duration, 1)
+            assert output_circ.duration == 1
 
             # Check that the Syndromes are correctly created
             expected_syndromes = tuple(
@@ -424,11 +322,11 @@ class TestApplicator(unittest.TestCase):
                 for stab in new_block.stabilizers
                 if set(stab.pauli) == {state.pauli_basis}
             )
-            self.assertEqual(output_step.syndromes, expected_syndromes)
+            assert output_step.syndromes == expected_syndromes
 
-    def test_ancilla_reset(self):
+    def test_ancilla_reset(self, n_rsc_block_factory):
         """Test that the applicator correctly applies the ancilla reset operation."""
-        rsc_block = self.rot_surf_code_1
+        rsc_block = n_rsc_block_factory(1)[0]
         rsc_ancilla_channels = {
             qub: Channel("quantum", str(qub)) for qub in rsc_block.ancilla_qubits
         }
@@ -457,16 +355,16 @@ class TestApplicator(unittest.TestCase):
         )
 
         # Check that the circuits are the same
-        self.assertEqual(output_circ, expected_circ)
+        assert output_circ == expected_circ
         # Check that all the reset operations are done in the same timestep
-        self.assertEqual(output_circ.duration, 1)
+        assert output_circ.duration == 1
 
-    def test_classical_channel_naming(self):
+    def test_classical_channel_naming(self, n_rsc_block_factory):
         """Verify that the classical channels created from syndrome measurement field
         are consistent for all operations
         """
         lattice = Lattice.square_2d((10, 20))
-        rsc_block = self.rot_surf_code_1
+        rsc_block = n_rsc_block_factory(1)[0]
 
         meas_block_log = MeasureLogicalZ(rsc_block.unique_label)
         input_eka = Eka(lattice, blocks=[rsc_block], operations=[meas_block_log])
@@ -483,11 +381,5 @@ class TestApplicator(unittest.TestCase):
             syndrome_meas_labels = [
                 f"{meas[0]}_{meas[1]}" for meas in syndrome.measurements
             ]
-            _ = [
-                self.assertIn(syndrome_meas_label, classical_channel_labels)
-                for syndrome_meas_label in syndrome_meas_labels
-            ]
-
-
-if __name__ == "__main__":
-    unittest.main()
+            for syndrome_meas_label in syndrome_meas_labels:
+                assert syndrome_meas_label in classical_channel_labels

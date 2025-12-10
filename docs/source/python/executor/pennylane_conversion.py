@@ -1,7 +1,11 @@
-from loom.executor import convert_circuit_to_pennylane
+from loom.executor import EkaToPennylaneConverter
 
-# interpreted_eka: InterpretationStep, is_catalyst: bool
-circuit_callable, qbit_register = convert_circuit_to_pennylane(
-    interpreted_eka.final_circuit,
-    is_catalyst,
+# interpreted_eka: InterpretationStep
+converter = EkaToPennylaneConverter()
+
+# Convert the Eka circuit to QASM string representation
+# is_catalyst: whether to convert to PennyLane Catalyst or standard PennyLane
+# import_prefix: optional prefix for PennyLane imports (default is "qml.")
+QASM_string, quantum_reg_mapping, classical_reg_mapping = converter.convert(
+    interpreted_eka, is_catalyst=True, import_prefix="qml."
 )

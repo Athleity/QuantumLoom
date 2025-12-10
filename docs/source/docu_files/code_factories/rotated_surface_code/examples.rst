@@ -40,13 +40,13 @@ The final circuits are then simulated using Stim to validate that the logical qu
 
         interpreted_circ_list.append(interpreted)
 
-    from loom.executor import EkaCircuitToStimConverter
+    from loom.executor import EkaToStimConverter
     import numpy as np
 
     # STIM settings
     stim_nsamples = 1000
 
-    converter = EkaCircuitToStimConverter()
+    converter = EkaToStimConverter()
     for index, interpreted in enumerate(interpreted_circ_list):
         # Convert interpreted Eka circuit to Stim circuit
         stim_circ = converter.convert(interpreted)
@@ -114,7 +114,7 @@ We will use the PyMatching package to decode the detector outcomes, and use MatP
     stim_nsamples = 1_000_000
     noise_rates = [10 ** (i) for i in np.linspace(-3.5, -2, 5)]
 
-    converter = EkaCircuitToStimConverter()
+    converter = EkaToStimConverter()
 
     circuit_lers_list = [[], [], [], []]
     for cir_index, interpreted in enumerate(interpreted_circ_list):

@@ -82,6 +82,7 @@ class Circuit:
     )
     channels: tuple[Channel, ...] = Field(default_factory=tuple, validate_default=True)
     duration: Optional[int] = Field(default=None, validate_default=True)
+    description: str = Field(default="", validate_default=True)
     id: str = Field(default_factory=lambda: str(uuid4()))
 
     # Validation functions

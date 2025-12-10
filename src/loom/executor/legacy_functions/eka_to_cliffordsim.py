@@ -15,17 +15,15 @@ limitations under the License.
 
 """
 
-# pylint: disable=line-too-long, invalid-name
-from functools import partial  # , reduce
+from functools import partial
 
-from loom import cliffordsim
-import loom.cliffordsim.operations as cops
-from ..eka import Circuit, Channel
+from ...eka import Circuit, Channel
+from ...cliffordsim import operations as cops
 
 
 def convert_circuit_to_cliffordsim(
     input_circuit: Circuit, index_to_channel_map: dict[int, Channel]
-) -> list[cliffordsim.operations.Operation]:
+) -> list[cops.Operation]:
     """
     Converts a Circuit object into a CliffordSim Circuit.
 
@@ -37,7 +35,6 @@ def convert_circuit_to_cliffordsim(
     registers at the end of the circuit. The classical registers are created based on
     the labels of the classical channels. The first set of letters, separated by an _,
     in the label of the classical channel is the name of the classical register.
-
 
     Parameter
     ---------
@@ -86,6 +83,7 @@ def convert_circuit_to_cliffordsim(
             cops.RecordClassicalRegister(reg_name=each_reg_name)
         )
 
+    # pylint: disable=invalid-name
     SQ_GATE_MAP = {
         "identity": cops.Identity,
         "h": cops.Hadamard,
@@ -96,6 +94,7 @@ def convert_circuit_to_cliffordsim(
         "phaseinv": cops.PhaseInv,
     }
 
+    # pylint: disable=invalid-name
     TQ_GATE_MAP = {
         "cnot": cops.CNOT,
         "cy": cops.CY,
@@ -104,6 +103,7 @@ def convert_circuit_to_cliffordsim(
         "swap": cops.SWAP,
     }
 
+    # pylint: disable=invalid-name
     MEASUREMENT_OPS_MAP = {
         "measurement": cops.Measurement,
         "measurementbias0": partial(cops.Measurement, bias=0),
@@ -114,6 +114,7 @@ def convert_circuit_to_cliffordsim(
         for basis in ["X", "Y", "Z"]
     }
 
+    # pylint: disable=invalid-name
     RESET_OPS_MAP = {
         "reset": cops.Reset,
     } | {
@@ -122,6 +123,7 @@ def convert_circuit_to_cliffordsim(
         for state in ["0", "1", "+", "-", "+i", "-i"]
     }
 
+    # pylint: disable=invalid-name
     CLASSICALLY_CONTROLLED_GATES_MAP = {
         f"classically_controlled_{sq_gate_name}": (cops.ControlledOperation, op)
         for sq_gate_name, op in SQ_GATE_MAP.items()
@@ -186,16 +188,19 @@ def convert_circuit_to_cliffordsim(
                     )
 
                 raise ValueError(
-                    "Measurement operation can only have either one or no classical channel."
+                    "Measurement operation can only have either one or no classical "
+                    "channel."
                 )
             if item.name in CLASSICALLY_CONTROLLED_GATES_MAP:
                 # Prepare the Operation that will be controlled.
                 inner_op = op_map[item.name][1](*target_qubit_idx)
 
-                # Classical Control X requires a classical register and classical bit to be specified.
+                # Classical Control X requires a classical register and classical bit
+                # to be specified.
                 if len(cc_labels) != 1:
                     raise ValueError(
-                        "Classically controlled operation must have exactly one classical channel."
+                        "Classically controlled operation must have exactly one "
+                        "classical channel."
                     )
                 cc_label = cc_labels[0]
                 reg_name = next(

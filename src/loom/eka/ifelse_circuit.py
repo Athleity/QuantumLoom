@@ -108,7 +108,7 @@ class IfElseCircuit(Circuit):
         if circuit is None or circuit.name == "empty_branch":
             return Circuit(name="empty_branch")
         if not circuit.circuit:
-            return Circuit(name=circuit.name, circuit=circuit)
+            return Circuit(name=f"wrapped_{circuit.name}", circuit=circuit)
         return circuit
 
     def __post_init__(self):
@@ -141,14 +141,6 @@ class IfElseCircuit(Circuit):
             self, "duration", max(self.if_circuit.duration, self.else_circuit.duration)
         )
 
-    # Inherited parent methods
-    # def nr_of_qubits_in_circuit(self) -> int:
-    #     """This method is inherited from Circuit"""
-
-    # def from_circuits(cls):
-    #     """This method is inherited from Circuit"""
-
-    # Override Parent Methods
     @classmethod
     def as_gate(cls):
         """Represent IfElseCircuit as a gate."""

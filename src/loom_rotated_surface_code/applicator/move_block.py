@@ -31,7 +31,6 @@ from .utilities import (
 )
 
 
-# pylint: disable=duplicate-code
 def move_block(
     interpretation_step: InterpretationStep,
     operation: MoveBlock,
@@ -50,39 +49,36 @@ def move_block(
 
     The algorithm is as follows:
 
-    - A.) Valid move check
+    - A.) Begin MoveBlock composite operation session
 
-        - A.1) Check if the qubits required for the block to be moved are available.
+    - B.) Valid move check
+        - B.1) Check if the qubits required for the block to be moved are available.
 
-    - B.) Shift the block
+    - C.) Shift the block
+        - C.1) Shift the block in the specified direction
+        - C.2) Update all the evolutions
+        - C.3) Propagate all the updates
 
-        - B.1) Shift the block in the specified direction
-        - B.2) Update the block history and evolution
-        - B.3) Update all the evolutions
-        - B.4) Propagate all the updates
-
-    - C.) Circuit generation
-
-        - C.1) Find the qubit initializations required for the swap-then-qec operation
+    - D.) Circuit generation
+        - D.1) Find the qubit initializations required for the swap-then-qec operation \
               and create the reset circuit
-        - C.2) Find the stabilizer schedules for the new block and generate the cnot
+        - D.2) Find the stabilizer schedules for the new block and generate the cnot \
               circuit
-        - C.3) Generate the teleportation finalization circuit with necessary updates
+        - D.3) Generate the teleportation finalization circuit with necessary updates \
               to stabilizers and logical operators
-        - C.4) Final measurement of the stabilizers and generation of syndromes
-        - C.5) Combine all the circuits into one diagonal move circuit
+        - D.4) Final measurement of the stabilizers and generation of syndromes
+        - D.5) Combine all the circuits into one diagonal move circuit
     
-    - D.) Append necessary information to the interpretation step
-    
-        - D.1) Append the circuit to the interpretation step
-        - D.2) Update the block history and evolution
-        - D.3) Create and append the new syndromes and detectors
+    - E.) Append necessary information to the interpretation step
+        - E.1) Append the circuit to the interpretation step
+        - E.2) Update the block history and evolution
+        - E.3) Create and append the new syndromes and detectors
 
-    - Repeat steps A, B, C for the second diagonal direction.
+    - Repeat steps B, C, D, E for the second diagonal direction.
 
-    - E.) Final Circuit
-        - E.1) Wrap the generated circuits into a single circuit representing the full \
-            MoveBlock operation.
+    - F.) Final Circuit
+        - F.1) End the composite operation session and append the full move block \
+        circuit
 
 
     If the block is moved to the top:
@@ -162,8 +158,13 @@ def move_block(
     """
     block = interpretation_step.get_block(operation.input_block_name)
 
-    # Begin composite operation
-    init_circ_len = len(interpretation_step.intermediate_circuit_sequence)
+    # A) Begin MoveBlock composite operation session
+    interpretation_step.begin_composite_operation_session_MUT(
+        same_timeslice=same_timeslice,
+        circuit_name=(
+            f"Move block {block.unique_label} towards {operation.direction.value}"
+        ),
+    )
 
     # Find occupied qubits from other blocks in the latest timeslice
     other_blocks = [
@@ -180,11 +181,11 @@ def move_block(
 
     current_block = block
     for diag_direction in decomposed_directions:
-        # A) - Valid move check
-        # A.1) Check if the qubits required for the block to be moved are available.
+        # B) - Valid move check
+        # B.1) Check if the qubits required for the block to be moved are available.
         check_valid_move(occupied_qubits, current_block.qubits, diag_direction)
 
-        # B, C, D) - Move the block diagonally via swap-QEC
+        # C, D, E) - Move the block diagonally via swap-QEC
         interpretation_step = move_block_diagonally_via_swap_qec(
             interpretation_step, current_block, diag_direction, debug_mode
         )
@@ -192,27 +193,10 @@ def move_block(
         # Prepare for the next iteration
         current_block = interpretation_step.get_block(operation.input_block_name)
 
-    # E) Final Circuit
-    # E.1) Wrap the generated circuits into a single circuit representing the full
-    # MoveBlock operation.
-    new_len = len(interpretation_step.intermediate_circuit_sequence)
-    len_op = new_len - init_circ_len
-    circuit_seq = interpretation_step.pop_intermediate_circuit_MUT(len_op)
-
-    wrapped_circuit_seq = ()
-    for timeslice in circuit_seq:
-        timespan = max(composite_circuit.duration for composite_circuit in timeslice)
-        # Create a circuit with empty timeslices and align circuits
-        template_circ = (
-            tuple(composite_circuit for composite_circuit in timeslice),
-        ) + ((),) * (timespan - 1)
-        wrapped_circuit_seq += template_circ
-
-    wrapped_circuit = Circuit(
-        name=(f"Move block {block.unique_label} towards {operation.direction.value}"),
-        circuit=wrapped_circuit_seq,
-    )
-    interpretation_step.append_circuit_MUT(wrapped_circuit, same_timeslice)
+    # F) Final Circuit
+    # F.1) End the composite operation session and append the full move block circuit
+    move_block_circuit = interpretation_step.end_composite_operation_session_MUT()
+    interpretation_step.append_circuit_MUT(move_block_circuit, same_timeslice)
 
     return interpretation_step
 
@@ -243,20 +227,20 @@ def move_block_diagonally_via_swap_qec(
         The new block after the move and the circuit that performs the move.
     """
 
-    # B) - Shift the block
-    # B.1) Shift the block in the specified direction
+    # C) - Shift the block
+    # C.1) Shift the block in the specified direction
     new_block, stab_ev, logx_ev, logz_ev = shift_block_towards_direction(
         current_block, diag_direction, debug_mode=debug_mode
     )
 
-    # B.2) Update all the evolutions
+    # C.2) Update all the evolutions
     # Stabilizer evolution
     interpretation_step.stabilizer_evolution.update(stab_ev)
     # Logical operator evolution
     interpretation_step.logical_x_evolution.update(logx_ev)
     interpretation_step.logical_z_evolution.update(logz_ev)
 
-    # B.3) Propagate all the updates
+    # C.3) Propagate all the updates
     # Stabilizer updates
     for new_stab_uuid, old_stab_uuids in stab_ev.items():
         propagated_updates = ()
@@ -274,8 +258,8 @@ def move_block_diagonally_via_swap_qec(
         "Z", new_block.logical_z_operators[0].uuid, (), True
     )
 
-    # C) CIRCUIT GENERATION
-    # C.1) Find the qubit initializations required for the swap-then-qec operation
+    # D) Circuit generation
+    # D.1) Find the qubit initializations required for the swap-then-qec operation
     # and create the reset circuit
     (
         anc_qubits_to_init,
@@ -285,7 +269,6 @@ def move_block_diagonally_via_swap_qec(
         current_block.stabilizers, diag_direction
     )
     reset_basis_circuit = Circuit(
-        # pylint: disable=duplicate-code
         name=("Initialization of qubits for first swap-then-qec"),
         circuit=[
             [
@@ -299,7 +282,8 @@ def move_block_diagonally_via_swap_qec(
         ],
     )
 
-    # C.2) Find the stabilizer schedules for the new block and generate the cnot circuit
+    # D.2) Find the stabilizer schedules for the new block and generate the cnot
+    # circuit
     stab_schedule_dict = find_detailed_schedules(new_block, diag_direction)
     cnots_circuit = get_swap_qec_cnots(
         interpretation_step,
@@ -310,8 +294,8 @@ def move_block_diagonally_via_swap_qec(
         data_qubits_to_init,
     )
 
-    # C.3) Generate the teleportation finalization circuit with necessary updates to
-    # stabilizers and logical operators
+    # D.3) Generate the teleportation finalization circuit with necessary updates
+    # to stabilizers and logical operators
     tp_finalization = generate_teleportation_measurement_circuit_with_updates(
         interpretation_step,
         new_block,
@@ -319,7 +303,7 @@ def move_block_diagonally_via_swap_qec(
         teleportation_qubit_pairs,
     )
 
-    # C.4) Final measurement of the stabilizers and generation of syndromes
+    # D.4) Final measurement of the stabilizers and generation of syndromes
     syndrome_meas_circ, stab_measurements = (
         generate_syndrome_measurement_circuit_and_cbits(
             interpretation_step,
@@ -327,7 +311,7 @@ def move_block_diagonally_via_swap_qec(
         )
     )
 
-    # C.5) Combine all the circuits into one diagonal move circuit
+    # D.5) Combine all the circuits into one diagonal move circuit
     circ = Circuit(
         name=f"move block {new_block.unique_label} towards {diag_direction.value}",
         circuit=Circuit.construct_padded_circuit_time_sequence(
@@ -339,16 +323,16 @@ def move_block_diagonally_via_swap_qec(
         ),
     )
 
-    # D) - APPEND NECESSARY INFORMATION TO THE INTERPRETATION STEP
-    # D.1) Append the circuit to the interpretation step
+    # E) - Append necessary information to the interpretation step
+    # E.1) Append the circuit to the interpretation step
     interpretation_step.append_circuit_MUT(circ, same_timeslice=False)
 
-    # D.2) Update the block history and evolution
+    # E.2) Update the block history and evolution
     interpretation_step.update_block_history_and_evolution_MUT(
         (new_block,), (current_block,)
     )
 
-    # D.3) Create and append the new syndromes and detectors
+    # E.3) Create and append the new syndromes and detectors
     # Create all new syndromes
     generate_and_append_block_syndromes_and_detectors(
         interpretation_step=interpretation_step,
@@ -738,7 +722,6 @@ def get_swap_qec_cnots(
         cnots[0].append(cnot_pair)
 
     # Find the rest of the cnots
-    # pylint: disable=duplicate-code
     for stab in new_block.stabilizers:
         if len(stab.data_qubits) == 4:
             data_qubits = stab_schedule_dict[stab].get_stabilizer_qubits(stab)
@@ -923,7 +906,6 @@ def generate_teleportation_measurement_circuit_with_updates(
     Circuit
         The circuit that finalizes the teleportation operation
     """
-    # pylint: disable=duplicate-code
     teleportation_circ_seq = [[]]
     for corrected_qubit, measured_qubit in teleportation_qubit_pairs:
         # Obtain the necessary channels and cbit
@@ -941,7 +923,6 @@ def generate_teleportation_measurement_circuit_with_updates(
         elif corrected_qubit in anc_qubits_to_init["Z"]:
             measure_op_name = "measure_x"
             update_pauli = "X"
-        # pylint: disable=duplicate-code
         else:
             raise ValueError("The ancilla qubit was not found in the initialization.")
 

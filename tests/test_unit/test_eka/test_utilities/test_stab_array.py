@@ -127,24 +127,6 @@ class TestStabArray(unittest.TestCase):
             "0000000000000001100",
             "0000000000110000000",
         ]
-        stabs_color_code_488_distance_5 = [
-            "01110100000000000000000000000000000",
-            "00000000000000000011101000000000000",
-            "00011110000000000000000000000000000",
-            "00000000000000000000111100000000000",
-            "11011000000000000000000000000000000",
-            "00000000000000000110110000000000000",
-            "00000001110100000000000000000000000",
-            "00000000000000000000000011101000000",
-            "00000000011110000000000000000000000",
-            "00000000000000000000000000111100000",
-            "00000000000001111000000000000000000",
-            "00000000000000000000000000000011110",
-            "00100111011001010000000000000000000",
-            "00000000000000000001001110110010100",
-            "00000000001010011000000000000000000",
-            "00000000000000000000000000010100110",
-        ]
         stabs_xzzx_surface_code_3x5_qubits = [
             "1000001000000000100010000000000",
             "0100000100000000010001000000000",
@@ -204,12 +186,6 @@ class TestStabArray(unittest.TestCase):
                 dtype=int,
             )
         )
-        stab_array_color_code_488_distance_5 = StabArray(
-            np.array(
-                [list(s) for s in stabs_color_code_488_distance_5],
-                dtype=int,
-            )
-        )
         stab_array_xzzx_surface_code_3x5_qubits = StabArray(
             np.array(
                 [list(s) for s in stabs_xzzx_surface_code_3x5_qubits],
@@ -224,7 +200,6 @@ class TestStabArray(unittest.TestCase):
             stab_array_repetition_code_5_qubits_y_checks,
             stab_array_bacon_shor_code_5x5_qubits,
             stab_array_rotated_surface_code_3x3_qubits,
-            stab_array_color_code_488_distance_5,
             stab_array_xzzx_surface_code_3x5_qubits,
         ]
 

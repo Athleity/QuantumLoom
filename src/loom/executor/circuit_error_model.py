@@ -19,10 +19,10 @@ from collections import defaultdict
 from enum import Enum
 import math
 from typing import Any, Callable, Optional, Protocol, runtime_checkable
+
 from pydantic import BaseModel, Field, field_validator, model_validator, PrivateAttr
 
-
-from loom.eka import Circuit
+from ..eka import Circuit
 
 
 # ====== Type / Aliases =====
@@ -32,10 +32,10 @@ from loom.eka import Circuit
 # optional time.
 # Allow returning a list of floats for error probabilities. Some noise instructions
 # may require multiple parameters (e.g., pauli_channel).
-# pylint: disable=too-few-public-methods
 @runtime_checkable
+# pylint: disable=too-few-public-methods
 class ErrorProbProtocol(Protocol):
-    """Protocol for error probability functions."""
+    """Define a protocol for error probability callables."""
 
     def __call__(
         self, time_from_start: Optional[float], time_of_tick: Optional[float]
@@ -54,6 +54,7 @@ class ErrorProbProtocol(Protocol):
         list[float]
             List of error probabilities.
         """
+        ...  # pylint: disable=unnecessary-ellipsis
 
 
 GateErrorProbProtocol = Callable[[Optional[float]], list[float]]
@@ -73,9 +74,9 @@ class ApplicationMode(str, Enum):
 # Error model shall define the types of errors that can occur in a quantum circuit,
 # In order to properly map to noise instructions in the different backends.
 class ErrorType(Enum):
-    """
-    Provides a set of error types that can be used to define the error model for a
+    """Provides a set of error types that can be used to define the error model for a
     quantum circuit.
+
     Each error type has a label and a number of parameters that it expects.
     Also provides a method to validate the parameters for the error type by checking
     they are a proper probability distribution (sum doesn't exceed 1 if multiple
@@ -117,10 +118,11 @@ class ErrorType(Enum):
 # ====== CircuitErrorModel Class =====
 class CircuitErrorModel(BaseModel):
     """
-    Define a circuit error model that can be used to simulate errors in quantum 
-    circuits. This model can be time-dependent or not, having error applied in different 
-    modes, and can define error probabilities for each gate in the circuit or for each 
-    tick in the circuit.
+    Define a circuit error model that can be used to simulate errors in quantum
+    circuits.
+    This model can be time-dependent or not, having error applied in different modes,
+    and can define error probabilities for each gate in the circuit or for each tick in
+    the circuit.
     It is designed to be used with the Circuit class and its operations.
 
     This class is very general and allows for very flexible error modeling, however, it
@@ -148,27 +150,28 @@ class CircuitErrorModel(BaseModel):
         A dictionary mapping gate names to their execution times.
         This is only used if the model is time-dependent.
         If the model is not time-dependent, this can be None.
-        If provided, it  must assign a duration to each gate type present in the 
+        If provided, it  must assign a duration to each gate type present in the
         circuit.
     gate_error_probabilities : Optional[dict[str, GateErrorProbProtocol]]
         A dictionary mapping gate names to a callable that returns the error probability
         for that gate.
-        If the model is time-dependent, the callable can take an optional time 
+        If the model is time-dependent, the callable can take an optional time
         parameter.
-        If the model is not time-dependent, the callable should not take any 
+        If the model is not time-dependent, the callable should not take any
         parameters.
         If one gate isn't in the dictionary, it will default to a callable that
-        returns 0.
+        returns 0.0.
     global_time_error_probability : Callable[[Optional[float]], list[float]]
         A callable that returns the error probability at a specific time in the circuit.
         It can take an optional time parameter, which represents some information in the
         current tick:
-        - If the application mode is END_OF_TICK, it represents the duration of the \
-        tick.
+
+        - If the application mode is END_OF_TICK, it represents the duration of the tick
         - If the application mode is IDLE_END_OF_TICK, it represents the idle times
-        of the channel in the tick.
+            of the channel in the tick.
 
         The function must be well-defined at t = 0 (for both inputs).
+
     """
 
     # Pydantic configuration, this is necessary to allow arbitrary types in the model.
@@ -190,7 +193,7 @@ class CircuitErrorModel(BaseModel):
     # Dictionary of gate durations, mapping gate names to their execution times.
     # It must assign a duration to each gate type used in the circuit.
     # For time-independent models, this can be left undefined (None).
-    gate_durations: Optional[dict[str, float]] = defaultdict(lambda: lambda _: [0.0])
+    gate_durations: Optional[dict[str, float]] = None
 
     def update_gate_durations(self, gate_durations: dict[str, float]):
         """Update the gate durations for the error model.
@@ -209,9 +212,8 @@ class CircuitErrorModel(BaseModel):
         lambda: lambda _: [0.0]
     )
 
-    # If the application mode is END_OF_TICK or IDLE_END_OF_TICK,
-    # this callable defines the error probability
-    # for a given time in the circuit.
+    # If the application mode is END_OF_TICK or IDLE_END_OF_TICK, this callable defines
+    # the error probability for a given time in the circuit.
     # It returns a list of floats according to the expected parameters of the
     # noise instruction.
     global_time_error_probability: ErrorProbProtocol = lambda _, __: [0.0]
@@ -233,8 +235,7 @@ class CircuitErrorModel(BaseModel):
     _idle_times: Optional[dict[str, list[float]]] = PrivateAttr(default=None)
 
     def model_post_init(self, __context: Any) -> None:
-        """
-        Post-initialization method to compute operation times and ticks duration
+        """Post-initialization method to compute operation times and ticks duration
         if the model is time-dependent.
 
         This is called after the model is initialized and all validators have run.
@@ -286,9 +287,9 @@ class CircuitErrorModel(BaseModel):
         return model
 
     # if time-dependent, _op_time and tick_time must be computed
-    # pylint: disable=protected-access
     @model_validator(mode="after")
     @classmethod
+    # pylint: disable=protected-access
     def check__op_time_defined_if_time_dependent(cls, model):
         """Ensure that _op_time is defined if the model is time-dependent."""
         if model.is_time_dependent and model._op_time is None:
@@ -307,20 +308,20 @@ class CircuitErrorModel(BaseModel):
         """Ensure the gates duration are defined for all gate used in the circuit
         and that each gate has a valid duration.
         """
-        if model.is_time_dependent:
-            unrolled = Circuit.unroll(model.circuit)
-            gate_set = {op.name for layer in unrolled for op in layer if op is not None}
-            v = model.gate_durations
+        unrolled = Circuit.unroll(model.circuit)
+        gate_set = {op.name for layer in unrolled for op in layer if op is not None}
+        v = model.gate_durations
 
-            if v is not None:
-                if not isinstance(v, dict):
-                    raise TypeError("gate_duration must be a dictionary or None")
-                missing_gates = [gate for gate in gate_set if gate not in v]
-                if missing_gates:
-                    raise ValueError(
-                        f"Missing gate durations for: {missing_gates}. Must provide ",
-                        f"durations for all gates in {gate_set}",
-                    )
+        if v is not None:
+            if not isinstance(v, dict):
+                raise TypeError("gate_duration must be a dictionary or None")
+
+            missing_gates = [gate for gate in gate_set if gate not in v]
+            if missing_gates:
+                raise ValueError(
+                    f"Missing gate durations for: {missing_gates}."
+                    f"Must provide durations, for all gates in {gate_set}",
+                )
         return model
 
     @field_validator("gate_error_probabilities", mode="before")
@@ -328,7 +329,8 @@ class CircuitErrorModel(BaseModel):
     def validate_gate_error_probabilities(
         cls, v: dict
     ) -> dict[str, GateErrorProbProtocol]:
-        """Validate the gate error probabilities dictionary.
+        """
+        Validate the gate error probabilities dictionary.
         Ensure it contains only gates in the gate_set
         Also ensure that each value is a callable.
 
@@ -413,17 +415,15 @@ class CircuitErrorModel(BaseModel):
     @model_validator(mode="after")
     @classmethod
     def validate_gate_error_probabilities_output(cls, model):
-        """
-        Validate that each lambda in gate_error_probabilities returns the correct
+        """Validate that each lambda in gate_error_probabilities returns the correct
         number of parameters. The previous validators will typically assign default
-        value of [0.0] to the gate error probabilities for each undefined gate, but
-        some error types may require multiple parameters (e.g., PAULI_CHANNEL).
+        value of [0.0] to the gate error probabilities for each undefined gate,
+        but some error types may require multiple parameters (e.g., PAULI_CHANNEL).
         This validator will reformat the default value to return a list of zeros with
-        the correct length.
-        """
+        the correct length."""
         # Create a new dictionary to hold potentially modified functions
         updated_gate_error_probabilities = {}
-        expected_count = model.error_type.param_count
+
         for gate_name, error_func in model.gate_error_probabilities.items():
 
             try:
@@ -440,7 +440,8 @@ class CircuitErrorModel(BaseModel):
                     and model.error_type.param_count > 1
                 ):
                     # Create a new function that returns the correct number of zeros
-
+                    expected_count = model.error_type.param_count
+                    # pylint: disable=cell-var-from-loop
                     if model.is_time_dependent:
                         updated_gate_error_probabilities[gate_name] = (
                             lambda t: [0.0] * expected_count
@@ -460,16 +461,14 @@ class CircuitErrorModel(BaseModel):
                     f"{e}"
                 ) from e
 
-        # Update the model with the potentially modified functions
-        if updated_gate_error_probabilities != model.gate_error_probabilities:
-            object.__setattr__(
-                model,
-                "gate_error_probabilities",
-                defaultdict(
-                    lambda: lambda _: [0.0] * model.error_type.param_count,
-                    updated_gate_error_probabilities,
-                ),
-            )
+        object.__setattr__(
+            model,
+            "gate_error_probabilities",
+            defaultdict(
+                lambda: lambda _: [0.0] * model.error_type.param_count,
+                updated_gate_error_probabilities,
+            ),
+        )
 
         return model
 
@@ -484,12 +483,7 @@ class CircuitErrorModel(BaseModel):
 
         # Define a dummy zero value for tick_time and global_time in order to test the
         # function's behavior.
-        tick_time = (
-            0.0
-            if model.application_mode
-            in {ApplicationMode.END_OF_TICK, ApplicationMode.IDLE_END_OF_TICK}
-            else None
-        )
+        tick_time = 0.0
         global_time = 0.0 if model.is_time_dependent else None
         try:
             result = model.global_time_error_probability(global_time, tick_time)
@@ -504,7 +498,7 @@ class CircuitErrorModel(BaseModel):
                 expected_count = model.error_type.param_count
                 # pylint: disable=unnecessary-lambda-assignment
                 if model.is_time_dependent:
-                    new_func = lambda t, _: [0.0] * expected_count
+                    new_func = lambda t, t2: [0.0] * expected_count
                 else:
                     new_func = lambda _, __: [0.0] * expected_count
                 object.__setattr__(model, "global_time_error_probability", new_func)
@@ -567,7 +561,7 @@ class CircuitErrorModel(BaseModel):
 
         Parameters
         ----------
-        int
+        tick_index : int
             The index of the tick for which to get the error probability.
 
         Returns
@@ -607,7 +601,7 @@ class CircuitErrorModel(BaseModel):
 
         Parameters
         ----------
-        Circuit
+        gate : Circuit
             The quantum gate for which to get the error type and probability.
 
         Returns
@@ -627,6 +621,7 @@ class CircuitErrorModel(BaseModel):
             # If the application mode is END_OF_TICK, return None
             return None
 
+        # pylint: disable=unsubscriptable-object
         if self.is_time_dependent:
             if gate.id not in self._op_time:
                 raise ValueError(f"Gate {gate.id} not found in operation time mapping.")
@@ -646,8 +641,7 @@ class CircuitErrorModel(BaseModel):
 
     @property
     def total_time(self) -> float:
-        """
-        Total time of the circuit, computed as the sum of all tick durations.
+        """Total time of the circuit, computed as the sum of all tick durations.
 
         Returns
         -------
@@ -667,12 +661,11 @@ class CircuitErrorModel(BaseModel):
         return sum(self._tick_durations)
 
     # ====== Utilities ======
-
+    # pylint: disable=unsubscriptable-object
     def _compute__op_times_and__tick_durations(
         self,
     ) -> tuple[dict[str, float], list[float], dict[str, list[float]]]:
-        """
-        Retrieve for each operation, the time elapsed from the start of the circuit
+        """Retrieve for each operation, the time elapsed from the start of the circuit
         until the start of the operation. Also computes the duration of each tick in the
         circuit and the idle time for each channel during each tick.
 
@@ -680,6 +673,7 @@ class CircuitErrorModel(BaseModel):
         -------
         tuple[dict[str, float], list[float], dict[str, list[float]]]
             A tuple containing:
+
             - dict[str, float]: A dictionary mapping gate IDs to the execution times
               (time elapsed before the gate's execution starts).
             - list[float]: A list of tick durations for each layer in the circuit.
@@ -694,9 +688,10 @@ class CircuitErrorModel(BaseModel):
         for tick in unrolled:
             channel_usage_time = defaultdict(lambda: 0)
             for operation in tick:
+                # pylint: disable=unsupported-membership-test
                 if operation.name not in self.gate_durations:
                     raise ValueError(
-                        f"Gate {operation.name} not found in gate_duration dictionary."
+                        f"Gate {operation.name} not found in gate_durations dictionary."
                     )
                 _op_time[operation.id] = time_stack
                 for ch in operation.channels:
@@ -725,10 +720,13 @@ class HomogeneousTimeIndependentCEM(CircuitErrorModel):
     over time.
 
     Enforces the following properties:
-        - The error model is not time-dependent.
+
+    - The error model is not time-dependent.
 
     Parameters
     ----------
+    circuit : Circuit
+        The quantum circuit to which the error model will be applied.
     error_type : ErrorType
         The type of error that the model will apply to the circuit.
     application_mode : ApplicationMode
@@ -799,6 +797,7 @@ class HomogeneousTimeDependentCEM(CircuitErrorModel):
     to all gates in the circuit.
 
     Enforces the following properties:
+
         - The error model is time-dependent.
 
     Parameters
@@ -900,12 +899,12 @@ class AsymmetricDepolarizeCEM(CircuitErrorModel):
         p_x = p_y = (1 - exp(-t / t1)) / 4
         p_z = (1 - exp(-t / t2)) / 2 - p_x
 
-        Parameters
+        Parameters:
         ----------
         t : float
             The time used to compute the error probabilities.
 
-        Returns
+        Returns:
         -------
             List[float]: [p_x, p_y, p_z]
         """

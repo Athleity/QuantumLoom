@@ -7,7 +7,7 @@ NOTE: This README is targeted for developers. A shortened version targeted at us
 on the Sphinx website under "1.Getting Started". The website home page can be accessed 
 locally by opening the `docs/build/html/index.html` file in any web browser.
 
-There is also another README in `docs`, targeted at developers who which to re-build the 
+There is also another README in `docs`, targeted at developers who wish to re-build the 
 Sphinx website. 
 
 ## `loom`: Installation Guide on MacOS/Linux (Poetry)

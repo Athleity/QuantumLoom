@@ -15,7 +15,7 @@ limitations under the License.
 
 """
 
-from loom.eka import Circuit, PauliOperator
+from loom.eka import PauliOperator
 from loom.eka.utilities import Orientation
 from loom.interpreter import InterpretationStep
 
@@ -46,21 +46,22 @@ def y_wall_out(
     """
     Implement the y_wall_out operation. The operation consists of three steps:
 
-    - A) Consistency check
+    - A.) Begin y_wall_out composite operation session
 
-    - B) Extract geometric information
+    - B.) Consistency check
 
-    - C) Call the sub-operations in sequence:
-
-        - C.1) One round of syndrome measurement of the initial block, \
-            with CNOT scheduling specifically designed for fault tolerance
-        - C.2) Y wall measurement and Hadamard
-        - C.3) Recombination of the Block to get rid of the wall via swap-then-QEC
-        - C.4) Swap-then-QEC to move the recombined block back to its original position
-        - C.5) d-2 rounds of syndrome measurement of the final block, \
-            with CNOT scheduling specifically designed for fault tolerance
+    - C.) Extract geometric information
     
-    - D) Wrap the y_wall_out circuit in a single circuit and append it
+    - D.) Call the sub-operations in sequence:
+        - D.1) One round of syndrome measurement of the initial block, \
+        with CNOT scheduling specifically designed for fault tolerance
+        - D.2) Y wall measurement and Hadamard
+        - D.3) Recombination of the Block to get rid of the wall via swap-then-QEC
+        - D.4) Swap-then-QEC to move the recombined block back to its original position
+        - D.5) d-2 rounds of syndrome measurement of the final block, \
+        with CNOT scheduling specifically designed for fault tolerance
+    
+    - E.) End the composite operation session and append the circuit
 
 
     Example: the block on the left is transformed into the block on the right::
@@ -115,20 +116,23 @@ def y_wall_out(
         The interpretation step after applying the y_wall_out operation.
     """
 
-    # Begin composite operation / y_wall_out
-    init_circ_len = len(interpretation_step.intermediate_circuit_sequence)
+    # A) Begin y_wall_out composite operation session
+    interpretation_step.begin_composite_operation_session_MUT(
+        same_timeslice=same_timeslice,
+        circuit_name=(f"y_wall_out operation on block {block.unique_label}"),
+    )
 
-    # A) Consistency check
+    # B) Consistency check
     y_wall_out_consistency_check(block, wall_position, wall_orientation)
 
-    # B) Extract geometric information
+    # C) Extract geometric information
     is_wall_hor = wall_orientation == Orientation.HORIZONTAL
     qubits_to_measure, qubits_to_idle, qubits_to_hadamard = find_qubit_sets(
         block, wall_position, is_wall_hor
     )
 
-    # C) Call the sub-operations in sequence
-    # C.1) One round of syndrome measurement of the initial block
+    # D) Call the sub-operations in sequence
+    # D.1) One round of syndrome measurement of the initial block
     interpretation_step = y_wall_out_initial_syndrome_measurement(
         interpretation_step,
         block,
@@ -136,7 +140,7 @@ def y_wall_out(
         debug_mode=debug_mode,
     )
 
-    # C.2) Y wall measurement and Hadamard
+    # D.2) Y wall measurement and Hadamard
     interpretation_step = y_wall_out_measurement_and_hadamard(
         interpretation_step,
         block,
@@ -155,7 +159,7 @@ def y_wall_out(
         qubits_to_idle,
     )
 
-    # C.3) Recombination of the Block to get rid of the wall via swap-then-QEC
+    # D.3) Recombination of the Block to get rid of the wall via swap-then-QEC
     interpretation_step = y_wall_out_recombination_swap_then_qec(
         interpretation_step,
         current_block,
@@ -168,7 +172,7 @@ def y_wall_out(
     )
     current_block = interpretation_step.get_block(block.unique_label)
 
-    # C.4) Swap-then-QEC to move the recombined block back to its original position
+    # D.4) Swap-then-QEC to move the recombined block back to its original position
     interpretation_step = y_wall_out_final_swap_then_qec(
         interpretation_step,
         current_block,
@@ -178,7 +182,7 @@ def y_wall_out(
     )
     current_block = interpretation_step.get_block(block.unique_label)
 
-    # C.5) d-2 rounds of syndrome measurement of the final block
+    # D.5) d-2 rounds of syndrome measurement of the final block
     interpretation_step = y_wall_out_final_qec_rounds(
         interpretation_step,
         current_block,
@@ -186,24 +190,9 @@ def y_wall_out(
         debug_mode=debug_mode,
     )
 
-    # D) Wrap the y_wall_out circuit in a single circuit and append it
-    # pylint: disable=duplicate-code
-    new_len = len(interpretation_step.intermediate_circuit_sequence)
-    len_y_wall_out = new_len - init_circ_len
-    circuit_seq = interpretation_step.pop_intermediate_circuit_MUT(len_y_wall_out)
-    wrapped_circuit_seq = ()
-    for timeslice in circuit_seq:
-        timespan = max(composite_circuit.duration for composite_circuit in timeslice)
-        # Create a circuit with empty timeslices and align circuits
-        template_circ = (
-            tuple(composite_circuit for composite_circuit in timeslice),
-        ) + ((),) * (timespan - 1)
-        wrapped_circuit_seq += template_circ
-    wrapped_circuit = Circuit(
-        name=f"y_wall_out operation on block {block.unique_label}",
-        circuit=wrapped_circuit_seq,
-    )
-    interpretation_step.append_circuit_MUT(wrapped_circuit, same_timeslice)
+    # E) End the composite operation session and append the circuit
+    y_wall_out_circuit = interpretation_step.end_composite_operation_session_MUT()
+    interpretation_step.append_circuit_MUT(y_wall_out_circuit, same_timeslice)
 
     return interpretation_step
 

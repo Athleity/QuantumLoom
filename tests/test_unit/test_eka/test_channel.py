@@ -16,14 +16,15 @@ limitations under the License.
 """
 
 from __future__ import annotations
-import unittest
 from pydantic import ValidationError
+
+import pytest
 
 from loom.eka import Channel, ChannelType
 from loom.eka.utilities import uuid_error
 
 
-class TestChannel(unittest.TestCase):
+class TestChannel:
     """
     Test for the Channel and ChannelType classes.
     """
@@ -37,8 +38,8 @@ class TestChannel(unittest.TestCase):
         """
         ch = Channel()
         uuid_error(ch.id)
-        self.assertEqual(ch.type, ChannelType.QUANTUM)
-        self.assertEqual(ch.label, "data_qubit")
+        assert ch.type == ChannelType.QUANTUM
+        assert ch.label == "data_qubit"
 
     def test_channel_custom(self):
         """
@@ -46,22 +47,15 @@ class TestChannel(unittest.TestCase):
         - wrong type of channel raises an exception,
         - wrong format of id raises an exception.
         """
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as cm:
             _ = Channel(type="qubit")
-        self.assertEqual(
-            str(context.exception.errors()[0]["msg"]),
-            "Input should be 'quantum' or 'classical'",
-        )
+        assert "Input should be 'quantum' or 'classical'" in str(cm.value)
 
-        with self.assertRaises(ValidationError) as context:
+        with pytest.raises(ValidationError) as cm:
             _ = Channel(id=1234)
-        self.assertEqual(
-            str(context.exception.errors()[0]["msg"]), "Input should be a valid string"
-        )
-
-        with self.assertRaises(Exception) as context:
+        assert "Input should be a valid string" in str(cm.value)
+        with pytest.raises(Exception) as cm:
             _ = Channel(id="1234")
-        self.assertEqual(
-            str(context.exception.errors()[0]["msg"]),
-            "Value error, Invalid uuid: 1234. UUID must be version 4.",
+        assert "Value error, Invalid uuid: 1234. UUID must be version 4." in str(
+            cm.value
         )

@@ -16,7 +16,7 @@ limitations under the License.
 """
 
 from ..eka import Circuit, Channel, Block, Stabilizer, LogicalState
-from ..executor import convert_circuit_to_cliffordsim
+from ..executor.legacy_functions import convert_circuit_to_cliffordsim
 from ..cliffordsim.operations import DeleteQubit, AddQubit, SWAP, Operation
 
 from .debug_dataclass import DebugData, AllChecks

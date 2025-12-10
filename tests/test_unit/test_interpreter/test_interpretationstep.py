@@ -15,321 +15,199 @@ limitations under the License.
 
 """
 
-import unittest
 from uuid import uuid4
 from copy import deepcopy
-
+import pytest
 from loom.eka import (
     Circuit,
     Channel,
     ChannelType,
-    Stabilizer,
     Block,
-    PauliOperator,
 )
 from loom.interpreter import InterpretationStep, Syndrome
 from loom.eka.utilities import SyndromeMissingError
 
+# pylint: disable=redefined-outer-name, too-many-lines
 
-# pylint: disable=too-many-lines
-class TestInterpretationStep(unittest.TestCase):
+
+@pytest.fixture(scope="module")
+def two_rsc_blocks(n_rsc_block_factory) -> list[Block]:
+    """Fixture for two rotated surface code blocks."""
+    rsc_blocks = n_rsc_block_factory(2)
+    rsc_blocks[0] = rsc_blocks[0].rename("q1")
+    rsc_blocks[1] = rsc_blocks[1].rename("q2")
+    return rsc_blocks
+
+
+class TestInterpretationStep:
     """
     Test for the InterpretationStep class.
     """
-
-    def setUp(self):
-        super().setUp()
-        # pylint: disable=duplicate-code
-        self.rot_surf_code_1 = Block(
-            stabilizers=(
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((1, 0, 0), (1, 1, 0), (0, 0, 0), (0, 1, 0)),
-                    ancilla_qubits=((1, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((2, 1, 0), (2, 2, 0), (1, 1, 0), (1, 2, 0)),
-                    ancilla_qubits=((2, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((1, 1, 0), (0, 1, 0), (1, 2, 0), (0, 2, 0)),
-                    ancilla_qubits=((1, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((2, 0, 0), (1, 0, 0), (2, 1, 0), (1, 1, 0)),
-                    ancilla_qubits=((2, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((0, 0, 0), (0, 1, 0)),
-                    ancilla_qubits=((0, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((2, 1, 0), (2, 2, 0)),
-                    ancilla_qubits=((3, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((2, 0, 0), (1, 0, 0)),
-                    ancilla_qubits=((2, 0, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((1, 2, 0), (0, 2, 0)),
-                    ancilla_qubits=((1, 3, 1),),
-                ),
-            ),
-            logical_x_operators=[
-                PauliOperator(
-                    pauli="XXX", data_qubits=((0, 0, 0), (1, 0, 0), (2, 0, 0))
-                )
-            ],
-            logical_z_operators=[
-                PauliOperator(
-                    pauli="ZZZ", data_qubits=((0, 0, 0), (0, 1, 0), (0, 2, 0))
-                )
-            ],
-            unique_label="q1",
-        )
-        self.rot_surf_code_2 = self.rot_surf_code_1.shift(
-            position=(4, 0), new_label="q2"
-        )
-        self.rot_surf_code_2new = Block(
-            stabilizers=(
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((5, 0, 0), (5, 1, 0), (4, 0, 0), (4, 1, 0)),
-                    ancilla_qubits=((5, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((5, 2, 0), (5, 3, 0), (4, 2, 0), (4, 3, 0)),
-                    ancilla_qubits=((5, 3, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((6, 1, 0), (6, 2, 0), (5, 1, 0), (5, 2, 0)),
-                    ancilla_qubits=((6, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZZZ",
-                    data_qubits=((6, 3, 0), (6, 4, 0), (5, 3, 0), (5, 4, 0)),
-                    ancilla_qubits=((6, 4, 1),),
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((5, 1, 0), (4, 1, 0), (5, 2, 0), (4, 2, 0)),
-                    ancilla_qubits=((5, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((5, 3, 0), (4, 3, 0), (5, 4, 0), (4, 4, 0)),
-                    ancilla_qubits=((5, 4, 1),),
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((6, 0, 0), (5, 0, 0), (6, 1, 0), (5, 1, 0)),
-                    ancilla_qubits=((6, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="XXXX",
-                    data_qubits=((6, 2, 0), (5, 2, 0), (6, 3, 0), (5, 3, 0)),
-                    ancilla_qubits=((6, 3, 1),),
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((4, 0, 0), (4, 1, 0)),
-                    ancilla_qubits=((4, 1, 1),),
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((4, 2, 0), (4, 3, 0)),
-                    ancilla_qubits=((4, 3, 1),),
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((6, 1, 0), (6, 2, 0)),
-                    ancilla_qubits=((7, 2, 1),),
-                ),
-                Stabilizer(
-                    pauli="XX",
-                    data_qubits=((6, 3, 0), (6, 4, 0)),
-                    ancilla_qubits=((7, 4, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((6, 0, 0), (5, 0, 0)),
-                    ancilla_qubits=((6, 0, 1),),
-                ),
-                Stabilizer(
-                    pauli="ZZ",
-                    data_qubits=((5, 4, 0), (4, 4, 0)),
-                    ancilla_qubits=((5, 5, 1),),
-                ),
-            ),
-            logical_x_operators=[
-                PauliOperator(
-                    pauli="XXX", data_qubits=((4, 0, 0), (5, 0, 0), (6, 0, 0))
-                )
-            ],
-            logical_z_operators=[
-                PauliOperator(
-                    pauli="ZZZZZ",
-                    data_qubits=((4, 0, 0), (4, 1, 0), (4, 2, 0), (4, 3, 0), (4, 4, 0)),
-                )
-            ],
-            unique_label="q2_new",
-        )
 
     def test_create_empty_interpretationstep(self):
         """
         Tests that a new InterpretationStep can be created without providing any
         arguments.
         """
-        _ = InterpretationStep()
+        i = InterpretationStep()
+        assert isinstance(i, InterpretationStep)
 
-    def test_get_block(self):
+    def test_get_block(self, two_rsc_blocks):
         """
         Tests that the `get_block` function returns the right blocks of the current
         configuration.
         """
+
+        rsc_blocks = two_rsc_blocks
         # First create an InterpretationStep with an initial configuration of 2 blocks
         step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
+                [rsc_blocks[0], rsc_blocks[1]],
             ]
         )
-        # Check that get_block returns the right blocks
-        self.assertEqual(step.get_block("q1"), self.rot_surf_code_1)
-        self.assertEqual(step.get_block("q2"), self.rot_surf_code_2)
+        # Check that get_block returns the right blocks (the "is" operator checks that
+        # the returned block is the same instance as the original)
+        assert step.get_block("q1") is rsc_blocks[0]
+        assert step.get_block("q2") is rsc_blocks[1]
 
+        new_block2 = rsc_blocks[1].rename("q2_new")
         # Now create an updated InterpretationStep whose block_history field has an
         # additional element with the old block q1 and an updated block q2_new
         step_updated = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
-                [self.rot_surf_code_1, self.rot_surf_code_2new],
+                [rsc_blocks[0], rsc_blocks[1]],
+                [rsc_blocks[0], new_block2],
             ]
         )
-        self.assertEqual(step_updated.get_block("q1"), self.rot_surf_code_1)
-        self.assertEqual(step_updated.get_block("q2_new"), self.rot_surf_code_2new)
+        assert step_updated.get_block("q1") is rsc_blocks[0]
+        assert step_updated.get_block("q2_new") is new_block2
         # Check that the old block q2 is not found anymore
-        with self.assertRaises(RuntimeError) as cm:
+        with pytest.raises(RuntimeError) as cm:
             _ = step_updated.get_block("q2")
 
         err_msg = "No block with label 'q2' found in the current configuration."
-        self.assertIn(err_msg, str(cm.exception))
+        assert err_msg in str(cm.value)
 
     def test_update_block_history_and_evolution_MUT(  # pylint: disable=invalid-name
-        self,
+        self, two_rsc_blocks, subtests
     ):
         """
         Test that the `update_block_history_and_evolution_MUT` function updates the
         block history correctly.
         """
-        step = InterpretationStep(
-            block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
-            ]
-        )
-        # Check that if we provide both the new and old blocks, the block history is
-        # updated correctly
-        step.update_block_history_and_evolution_MUT(
-            new_blocks=(self.rot_surf_code_2new,),
-            old_blocks=(self.rot_surf_code_2,),
-        )
-        self.assertEqual(
-            step.block_history,
-            (
-                (self.rot_surf_code_1, self.rot_surf_code_2),
-                (self.rot_surf_code_1, self.rot_surf_code_2new),
-            ),
-        )
-        self.assertEqual(
-            step.block_evolution,
-            {
-                self.rot_surf_code_2new.uuid: (self.rot_surf_code_2.uuid,),
-            },
-        )
 
-        step = InterpretationStep(
-            block_history=[
-                [self.rot_surf_code_1],
-            ]
-        )
+        new_2nd_block = two_rsc_blocks[1].rename("q2_new")
+
+        # Check that if we provide both the new and old blocks, the block history is
+        # updated correctly.
+        with subtests.test(msg="simple update of the history"):
+            step = InterpretationStep(
+                block_history=[
+                    two_rsc_blocks,
+                ]
+            )
+
+            step.update_block_history_and_evolution_MUT(
+                new_blocks=(new_2nd_block,),
+                old_blocks=(two_rsc_blocks[1],),
+            )
+
+            assert step.block_history == (
+                (two_rsc_blocks[0], two_rsc_blocks[1]),
+                (two_rsc_blocks[0], new_2nd_block),
+            )
+
+            assert step.block_evolution == {
+                new_2nd_block.uuid: (two_rsc_blocks[1].uuid,),
+            }
+
         # Check that if we provide only the new blocks, the block history is updated
         # the new blocks are added and no block is removed
-        step.update_block_history_and_evolution_MUT(
-            new_blocks=(self.rot_surf_code_2,),
-        )
-        self.assertEqual(
-            step.block_history,
-            (
-                (self.rot_surf_code_1,),
-                (self.rot_surf_code_1, self.rot_surf_code_2),
-            ),
-        )
-        # No evolution because there is only new blocks
-        self.assertEqual(step.block_evolution, {})
+        with subtests.test(msg="add new block to the history"):
 
-        step = InterpretationStep(
-            block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
-            ]
-        )
+            step = InterpretationStep(
+                block_history=[
+                    [
+                        two_rsc_blocks[0],
+                    ],
+                ]
+            )
+
+            step.update_block_history_and_evolution_MUT(
+                new_blocks=(two_rsc_blocks[1],),
+            )
+
+            assert step.block_history == (
+                (two_rsc_blocks[0],),
+                (two_rsc_blocks[0], two_rsc_blocks[1]),
+            )
+
+            # No evolution because there is only new blocks
+            assert step.block_evolution == {}
+
         # Check that if we provide only the old blocks, the block history is updated
         # no block is added and the old blocks are removed
-        step.update_block_history_and_evolution_MUT(
-            old_blocks=(self.rot_surf_code_2,),
-        )
-        self.assertEqual(
-            step.block_history,
-            (
-                (self.rot_surf_code_1, self.rot_surf_code_2),
-                (self.rot_surf_code_1,),
-            ),
-        )
-        # No evolution because there is only old blocks
-        self.assertEqual(step.block_evolution, {})
+        with subtests.test(msg="remove block from the history"):
 
-        # Check that if the old blocks are not found in the current configuration, an
-        # error is raised
-        with self.assertRaises(ValueError) as cm:
-            step.update_block_history_and_evolution_MUT(
-                old_blocks=(self.rot_surf_code_2new,),
+            step = InterpretationStep(
+                block_history=[
+                    [two_rsc_blocks[0], two_rsc_blocks[1]],
+                ]
             )
-        err_msg = "Block 'q2_new' is not in the current block configuration."
-        self.assertIn(err_msg, str(cm.exception))
-        # Check that if the new blocks are already in the current configuration, an
-        # error is raised
-        with self.assertRaises(ValueError) as cm:
+
             step.update_block_history_and_evolution_MUT(
-                new_blocks=(self.rot_surf_code_1,),
+                old_blocks=(two_rsc_blocks[1],),
             )
-        err_msg = "Block 'q1' is already in the current block configuration."
-        self.assertIn(err_msg, str(cm.exception))
+
+            assert step.block_history == (
+                (two_rsc_blocks[0], two_rsc_blocks[1]),
+                (two_rsc_blocks[0],),
+            )
+
+            # No evolution because there is only old blocks
+            assert step.block_evolution == {}
+
+        with subtests.test(msg="check error raised when updating the history"):
+            # Check that if the old blocks are not found in the current configuration,
+            # an error is raised
+            with pytest.raises(ValueError) as cm:
+                step.update_block_history_and_evolution_MUT(
+                    old_blocks=(new_2nd_block,),
+                )
+
+            err_msg = "Block 'q2_new' is not in the current block configuration."
+            assert err_msg in str(cm.value)
+
+            # Check that if the new blocks are already in the current configuration, an
+            # error is raised
+            with pytest.raises(ValueError) as cm:
+                step.update_block_history_and_evolution_MUT(
+                    new_blocks=(two_rsc_blocks[0],),
+                )
+            err_msg = "Block 'q1' is already in the current block configuration."
+            assert err_msg in str(cm.value)
 
         # Check that two blocks with the same label but different uuid are allowed.
-        step = InterpretationStep(
-            block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
-            ]
-        )
-        duplicate_q2_label_block = self.rot_surf_code_1.shift(
-            position=(0, 0), new_label="q2"
-        )
-        step.update_block_history_and_evolution_MUT(
-            new_blocks=(duplicate_q2_label_block,),
-            old_blocks=(self.rot_surf_code_2,),
-        )
-        self.assertEqual(step.get_block("q2"), duplicate_q2_label_block)
-        self.assertNotEqual(step.get_block("q2"), self.rot_surf_code_2)
+        with subtests.test(msg="duplicate block labels allowed"):
+            step = InterpretationStep(
+                block_history=[
+                    [two_rsc_blocks[0], two_rsc_blocks[1]],
+                ]
+            )
+            duplicate_q2_label_block = two_rsc_blocks[0].shift(
+                position=(0, 0), new_label="q2"
+            )
+            step.update_block_history_and_evolution_MUT(
+                new_blocks=(duplicate_q2_label_block,),
+                old_blocks=(two_rsc_blocks[1],),
+            )
 
-    def test_update_logical_operator_updates_MUT(self):  # pylint: disable=invalid-name
+            assert step.get_block("q2") == duplicate_q2_label_block
+            assert step.get_block("q2") != two_rsc_blocks[1]
+
+    def test_update_logical_operator_updates_MUT(
+        self, subtests
+    ):  # pylint: disable=invalid-name
         """
         Tests the `update_logical_operator_updates_MUT` function.
         """
@@ -377,6 +255,7 @@ class TestInterpretationStep(unittest.TestCase):
         input_args_and_expected_results = (
             (  # Test that the X update dictionary is populated with the correct values,
                 # inherit_updates=False
+                "X operator, inherit_updates=False",
                 {
                     "operator_type": "X",
                     "logical_operator_id": logical_x_ids[0],
@@ -391,6 +270,7 @@ class TestInterpretationStep(unittest.TestCase):
             ),
             (  # Test that the X update dictionary is populated with the correct values,
                 # inherit_updates=True
+                "X operator, inherit_updates=True",
                 {
                     "operator_type": "X",
                     "logical_operator_id": logical_x_ids[0],
@@ -409,6 +289,7 @@ class TestInterpretationStep(unittest.TestCase):
             (  # Test that the X update dictionary is populated with the correct values,
                 # inherit_updates=True, but the logical operator ID is not in the
                 # logical_x_operator_updates dictionary
+                "X operator, inherit_updates=True, operator ID not in dictionary",
                 {
                     "operator_type": "X",
                     "logical_operator_id": logical_x_ids[1],
@@ -423,6 +304,7 @@ class TestInterpretationStep(unittest.TestCase):
             ),
             (  # Test that the Z update dictionary is populated with the correct values,
                 # inherit_updates=False
+                "Z operator, inherit_updates=False",
                 {
                     "operator_type": "Z",
                     "logical_operator_id": logical_z_ids[0],
@@ -437,6 +319,7 @@ class TestInterpretationStep(unittest.TestCase):
             ),
             (  # Test that the Z update dictionary is populated with the correct values,
                 # inherit_updates=True
+                "Z operator, inherit_updates=True",
                 {
                     "operator_type": "Z",
                     "logical_operator_id": logical_z_ids[0],
@@ -454,6 +337,7 @@ class TestInterpretationStep(unittest.TestCase):
             (  # Test that the Z update dictionary is populated with the correct values,
                 # inherit_updates=True, but the logical operator ID is not in the
                 # logical_z_operator_updates dictionary
+                "Z operator, inherit_updates=True, operator ID not in dictionary",
                 {
                     "operator_type": "Z",
                     "logical_operator_id": logical_z_ids[2],
@@ -463,6 +347,7 @@ class TestInterpretationStep(unittest.TestCase):
                 (("c_(2, 2, 1)", 4),),
             ),
             (  # Test that an empty updates doesn't change the dictionary
+                "X operator, empty updates",
                 {
                     "operator_type": "X",
                     "logical_operator_id": logical_x_ids[0],
@@ -475,29 +360,30 @@ class TestInterpretationStep(unittest.TestCase):
                 ),
             ),
         )
-        # Loop over the input arguments and expected results
-        for input_args, expected_result in input_args_and_expected_results:
-            # Copy to re-use the initial step
-            modified_step = deepcopy(initial_step)
-            # Call the function with the input arguments
-            modified_step.update_logical_operator_updates_MUT(**input_args)
-            check_update_dictionary = (
-                modified_step.logical_x_operator_updates
-                if input_args["operator_type"] == "X"
-                else modified_step.logical_z_operator_updates
-            )
-            self.assertEqual(
-                check_update_dictionary[input_args["logical_operator_id"]],
-                expected_result,
-            )
+        # Loop over the input arguments and expected results using subtests
+        for test_name, input_args, expected_result in input_args_and_expected_results:
+            with subtests.test(msg=test_name):
+                # Copy to re-use the initial step
+                modified_step = deepcopy(initial_step)
+                # Call the function with the input arguments
+                modified_step.update_logical_operator_updates_MUT(**input_args)
+                check_update_dictionary = (
+                    modified_step.logical_x_operator_updates
+                    if input_args["operator_type"] == "X"
+                    else modified_step.logical_z_operator_updates
+                )
+                assert (
+                    check_update_dictionary[input_args["logical_operator_id"]]
+                    == expected_result
+                )
 
-    def test_get_channel_MUT(self):  # pylint: disable=invalid-name
+    def test_get_channel_MUT(self, two_rsc_blocks):  # pylint: disable=invalid-name
         """
         Tests the `get_channel_MUT` function.
         """
         step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
+                two_rsc_blocks,
             ]
         )
         ch_labels = [
@@ -513,33 +399,34 @@ class TestInterpretationStep(unittest.TestCase):
         ]
         channels = {step.get_channel_MUT(ch_label) for ch_label in ch_labels}
         channel_labels = set(ch.label for ch in channels)
+
         # Check that only 3 channels are created and that their labels match the unique
         # labels of the `ch_labels` list
-        self.assertEqual(len(channels), 3)
-        self.assertEqual(channel_labels, set(ch_labels))
+        assert len(channels) == 3
+        assert channel_labels == set(ch_labels)
         # Check that the `channel_dict` property of the InterpretationStep stores the
         # three channels and that the keys are the unique labels of the channels
-        self.assertEqual(set(step.channel_dict.values()), channels)
-        self.assertEqual(set(step.channel_dict.keys()), set(ch_labels))
+        assert set(step.channel_dict.values()) == channels
+        assert set(step.channel_dict.keys()) == set(ch_labels)
 
-    def test_append_circuit_MUT(self):  # pylint: disable=invalid-name
+    def test_append_circuit_MUT(self, two_rsc_blocks):  # pylint: disable=invalid-name
         """
         Tests the `append_circuit_MUT` function.
         """
         step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
+                two_rsc_blocks,
             ]
         )
-        self.assertEqual(step.intermediate_circuit_sequence, tuple())
+        assert step.intermediate_circuit_sequence == tuple()
         channels = [step.get_channel_MUT(ch_label) for ch_label in ["d0", "d1"]]
         c1 = Circuit(name="h", channels=channels[0])
         # Check that the append_circuit_MUT function does not return anything
-        self.assertEqual(step.append_circuit_MUT(c1), None)
+        assert step.append_circuit_MUT(c1) is None
         # Check that after append_circuit_MUT was called, step.circuit has now a single
         # circuit in its `circuit` field and that this circuit is equal to c1
-        self.assertEqual(len(step.intermediate_circuit_sequence), 1)
-        self.assertEqual(step.intermediate_circuit_sequence[0][0], c1)
+        assert len(step.intermediate_circuit_sequence) == 1
+        assert step.intermediate_circuit_sequence[0][0] == c1
 
         # Add 2 more circuits
         c2 = Circuit(name="cnot", channels=channels)
@@ -547,124 +434,120 @@ class TestInterpretationStep(unittest.TestCase):
             name="measurement",
             channels=[channels[1], Channel(type=ChannelType.CLASSICAL, label="c0")],
         )
-        self.assertEqual(step.append_circuit_MUT(c2), None)
-        self.assertEqual(step.append_circuit_MUT(c3), None)
+        assert step.append_circuit_MUT(c2) is None
+        assert step.append_circuit_MUT(c3) is None
         # step.circuit.circuit contains the previous circuit + the number of newly added
         # circuits
-        self.assertEqual(len(step.intermediate_circuit_sequence), 3)
-        self.assertEqual(step.intermediate_circuit_sequence[0][0], c1)
-        self.assertEqual(step.intermediate_circuit_sequence[1][0], c2)
-        self.assertEqual(step.intermediate_circuit_sequence[2][0], c3)
+        assert len(step.intermediate_circuit_sequence) == 3
+        assert step.intermediate_circuit_sequence[0][0] == c1
+        assert step.intermediate_circuit_sequence[1][0] == c2
+        assert step.intermediate_circuit_sequence[2][0] == c3
 
         # Check that the circuit can be added in the same timestep as the last operation
         c4 = Circuit(name="h", channels=channels[0])
-        self.assertEqual(step.append_circuit_MUT(c4, same_timeslice=True), None)
+        assert step.append_circuit_MUT(c4, same_timeslice=True) is None
+
         expected_intermediate_circuit_sequence = (
             (c1,),
             (c2,),
             (c3, c4),
         )
-        self.assertEqual(
-            step.intermediate_circuit_sequence, expected_intermediate_circuit_sequence
+
+        assert (
+            step.intermediate_circuit_sequence == expected_intermediate_circuit_sequence
         )
 
         # Check that an error is thrown if the circuit is added in the same timestep as
         # a circuit acting on the same channel
         # Check that the append_circuit_MUT function does not return anything
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as cm:
             step.append_circuit_MUT(c4, same_timeslice=True)
+
         err_msg = (
             "The channels of the new circuit are already in use in the current "
             "timeslice. Please use a new timeslice."
         )
-        self.assertIn(err_msg, str(cm.exception))
+        assert err_msg in str(cm.value)
 
-    def test_get_new_cbit_MUT(self):  # pylint: disable=invalid-name
+    def test_get_new_cbit_MUT(self, two_rsc_blocks):  # pylint: disable=invalid-name
         """
         Tests the `get_new_cbit_MUT` function.
         """
         step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
+                two_rsc_blocks,
             ]
         )
-        self.assertEqual(step.get_new_cbit_MUT("c"), ("c", 0))
-        self.assertEqual(step.get_new_cbit_MUT("c"), ("c", 1))
-        self.assertEqual(step.get_new_cbit_MUT("c"), ("c", 2))
-        self.assertEqual(step.get_new_cbit_MUT("d"), ("d", 0))
-        self.assertEqual(step.get_new_cbit_MUT("d"), ("d", 1))
-        self.assertEqual(step.get_new_cbit_MUT("d"), ("d", 2))
-        self.assertEqual(step.get_new_cbit_MUT("reg1"), ("reg1", 0))
-        self.assertEqual(step.cbit_counter, {"c": 3, "d": 3, "reg1": 1})
+        assert step.get_new_cbit_MUT("c") == ("c", 0)
+        assert step.get_new_cbit_MUT("c") == ("c", 1)
+        assert step.get_new_cbit_MUT("c") == ("c", 2)
+        assert step.get_new_cbit_MUT("d") == ("d", 0)
+        assert step.get_new_cbit_MUT("d") == ("d", 1)
+        assert step.get_new_cbit_MUT("d") == ("d", 2)
+        assert step.get_new_cbit_MUT("reg1") == ("reg1", 0)
+        assert step.cbit_counter == {"c": 3, "d": 3, "reg1": 1}
 
-    def test_get_prev_syndrome(self):
+    def test_get_prev_syndrome(self, two_rsc_blocks):
         """
         Test the `get_prev_syndrome` function.
         """
-
+        rsc_block = two_rsc_blocks[0]
         ## 1 - Direct mapping of stabilizers
         int_step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1],
+                [rsc_block],
             ],
             syndromes=[
                 Syndrome(
                     stabilizer=stab.uuid,
                     measurements=((f"c_{stab.ancilla_qubits[0]}", i),),
-                    block=self.rot_surf_code_1.uuid,
+                    block=rsc_block.uuid,
                     round=5 + i,
                 )
-                for stab in self.rot_surf_code_1.stabilizers
+                for stab in rsc_block.stabilizers
                 for i in range(2)
             ],
         )
+
         # Test that the right syndromes are returned
-        for stab in self.rot_surf_code_1.stabilizers:
-            self.assertEqual(
-                int_step.get_prev_syndrome(stab.uuid, self.rot_surf_code_1.uuid),
-                [
-                    Syndrome(
-                        stabilizer=stab.uuid,
-                        measurements=((f"c_{stab.ancilla_qubits[0]}", 1),),
-                        block=self.rot_surf_code_1.uuid,
-                        round=6,
-                    )
-                ],
-            )
+        for stab in rsc_block.stabilizers:
+            assert int_step.get_prev_syndrome(stab.uuid, rsc_block.uuid) == [
+                Syndrome(
+                    stabilizer=stab.uuid,
+                    measurements=((f"c_{stab.ancilla_qubits[0]}", 1),),
+                    block=rsc_block.uuid,
+                    round=6,
+                )
+            ]
 
         ## 2 - The stabilizers don't change, but the block does
         # The syndromes from the first block are measured but we get them through the
         # block evolution
         # Create a copy of the block with a different label
-        rsc_1_copy = Block(
-            stabilizers=self.rot_surf_code_1.stabilizers,
-            logical_x_operators=self.rot_surf_code_1.logical_x_operators,
-            logical_z_operators=self.rot_surf_code_1.logical_z_operators,
-            syndrome_circuits=self.rot_surf_code_1.syndrome_circuits,
-            stabilizer_to_circuit=self.rot_surf_code_1.stabilizer_to_circuit,
-            unique_label="q1_copy",
-        )
+        rsc_1_copy = rsc_block.rename("q1_copy")
+
         int_step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1],
+                [rsc_block],
                 [rsc_1_copy],
             ],
             block_evolution={
-                rsc_1_copy.uuid: (self.rot_surf_code_1.uuid,),
+                rsc_1_copy.uuid: (rsc_block.uuid,),
             },
             stabilizer_evolution={},
             syndromes=[
                 Syndrome(
                     stabilizer=stab.uuid,
                     measurements=((f"c_{stab.ancilla_qubits[0]}", i + 1),),
-                    block=self.rot_surf_code_1.uuid,
+                    block=rsc_1_copy.uuid,
                     round=i,
                 )
                 # Syndromes are created for the initial block
-                for stab in self.rot_surf_code_1.stabilizers
+                for stab in rsc_block.stabilizers
                 for i in range(2)
             ],
         )
+
         # Test that the right syndromes are returned
         for stab in rsc_1_copy.stabilizers:
             calculated_syndrome = int_step.get_prev_syndrome(stab.uuid, rsc_1_copy.uuid)
@@ -672,27 +555,24 @@ class TestInterpretationStep(unittest.TestCase):
                 Syndrome(
                     stabilizer=stab.uuid,
                     measurements=((f"c_{stab.ancilla_qubits[0]}", 2),),
-                    block=self.rot_surf_code_1.uuid,
+                    block=rsc_1_copy.uuid,
                     round=1,
                 )
             ]
-            self.assertEqual(calculated_syndrome, expected_syndrome)
+            assert calculated_syndrome == expected_syndrome
 
         ## 3 - Both the stabilizers and the block change, e.g. two blocks of same size
         # and in a different position with 1-to-1 stabilizer mapping
         int_step = InterpretationStep(
-            block_history=[
-                [self.rot_surf_code_1],
-                [self.rot_surf_code_2],
-            ],
+            block_history=[two_rsc_blocks],
             block_evolution={
-                self.rot_surf_code_2.uuid: (self.rot_surf_code_1.uuid,),
+                two_rsc_blocks[1].uuid: (two_rsc_blocks[0].uuid,),
             },
             stabilizer_evolution={
                 stab2.uuid: (stab1.uuid,)
                 for stab1, stab2 in zip(
-                    self.rot_surf_code_1.stabilizers,
-                    self.rot_surf_code_2.stabilizers,
+                    two_rsc_blocks[0].stabilizers,
+                    two_rsc_blocks[1].stabilizers,
                     strict=True,
                 )
             },
@@ -700,48 +580,48 @@ class TestInterpretationStep(unittest.TestCase):
                 Syndrome(
                     stabilizer=stab.uuid,
                     measurements=((f"c_{stab.ancilla_qubits[0]}", i + 1),),
-                    block=self.rot_surf_code_1.uuid,
+                    block=two_rsc_blocks[0].uuid,
                     round=i,
                 )
                 # Syndromes are created for the initial block
-                for stab in self.rot_surf_code_1.stabilizers
+                for stab in two_rsc_blocks[0].stabilizers
                 for i in range(2)
             ],
         )
 
         for stab1, stab2 in zip(
-            self.rot_surf_code_1.stabilizers,
-            self.rot_surf_code_2.stabilizers,
+            two_rsc_blocks[0].stabilizers,
+            two_rsc_blocks[1].stabilizers,
             strict=True,
         ):
             calculated_syndrome = int_step.get_prev_syndrome(
-                stab2.uuid, self.rot_surf_code_2.uuid
+                stab2.uuid, two_rsc_blocks[1].uuid
             )
             expected_syndrome = [
                 Syndrome(
                     stabilizer=stab1.uuid,
                     measurements=((f"c_{stab1.ancilla_qubits[0]}", 2),),
-                    block=self.rot_surf_code_1.uuid,
+                    block=two_rsc_blocks[0].uuid,
                     round=1,
                 )
             ]
-            self.assertEqual(calculated_syndrome, expected_syndrome)
+            assert calculated_syndrome == expected_syndrome
 
         ## 4 - The stabilizer and the Block changed, the new stabilizer was measured
         # and then only the Block changed twice before the next measurement.
-        rsc_2_copy_a = self.rot_surf_code_2.rename(self.rot_surf_code_2.unique_label)
-        rsc_2_copy_b = self.rot_surf_code_2.rename(self.rot_surf_code_2.unique_label)
+        rsc_2_copy_a = two_rsc_blocks[1].rename(two_rsc_blocks[1].unique_label)
+        rsc_2_copy_b = two_rsc_blocks[1].rename(two_rsc_blocks[1].unique_label)
         int_step = InterpretationStep(
             block_evolution={
-                self.rot_surf_code_2.uuid: (self.rot_surf_code_1.uuid,),
-                rsc_2_copy_a.uuid: (self.rot_surf_code_2.uuid,),
+                two_rsc_blocks[1].uuid: (two_rsc_blocks[0].uuid,),
+                rsc_2_copy_a.uuid: (two_rsc_blocks[1].uuid,),
                 rsc_2_copy_b.uuid: (rsc_2_copy_a.uuid,),
             },
             stabilizer_evolution={
                 stab2.uuid: (stab1.uuid,)
                 for stab1, stab2 in zip(
-                    self.rot_surf_code_1.stabilizers,
-                    self.rot_surf_code_2.stabilizers,
+                    two_rsc_blocks[0].stabilizers,
+                    two_rsc_blocks[1].stabilizers,
                     strict=True,
                 )
             },
@@ -750,10 +630,10 @@ class TestInterpretationStep(unittest.TestCase):
                 Syndrome(
                     stabilizer=stab.uuid,
                     measurements=((f"c_{stab.ancilla_qubits[0]}", round + 1),),
-                    block=self.rot_surf_code_1.uuid,
+                    block=two_rsc_blocks[0].uuid,
                     round=round,
                 )
-                for stab in self.rot_surf_code_1.stabilizers
+                for stab in two_rsc_blocks[0].stabilizers
                 for round in range(2)
             ]
             + [
@@ -761,10 +641,10 @@ class TestInterpretationStep(unittest.TestCase):
                 Syndrome(
                     stabilizer=stab.uuid,
                     measurements=((f"c_{stab.ancilla_qubits[0]}", round + 1),),
-                    block=self.rot_surf_code_2.uuid,
+                    block=two_rsc_blocks[1].uuid,
                     round=round,
                 )
-                for stab in self.rot_surf_code_2.stabilizers
+                for stab in two_rsc_blocks[1].stabilizers
                 for round in range(2)
             ],
         )
@@ -779,170 +659,165 @@ class TestInterpretationStep(unittest.TestCase):
                     stabilizer=stab.uuid,
                     measurements=((f"c_{stab.ancilla_qubits[0]}", 2),),
                     # Last measured in the second block
-                    block=self.rot_surf_code_2.uuid,
+                    block=two_rsc_blocks[1].uuid,
                     # 2 rounds created : 0 and 1
                     round=1,
                 )
             ]
-            self.assertEqual(calculated_syndrome, expected_syndrome)
+            assert calculated_syndrome == expected_syndrome
 
         ## 5 - The stabilizers have never been measured
         # We should get an empty list
 
         base_step = InterpretationStep(
-            block_history=[[self.rot_surf_code_1]],
+            block_history=[[two_rsc_blocks[0]]],
             syndromes=tuple(),
         )
         # Test that an empty list is returned
-        for stab in self.rot_surf_code_1.stabilizers:
-            self.assertEqual(
-                base_step.get_prev_syndrome(stab.uuid, self.rot_surf_code_1.uuid),
-                [],
-            )
+        for stab in two_rsc_blocks[0].stabilizers:
+            assert base_step.get_prev_syndrome(stab.uuid, two_rsc_blocks[0].uuid) == []
 
-    def test_append_syndromes_MUT(self):  # pylint: disable=invalid-name
+    def test_append_syndromes_MUT(self, two_rsc_blocks):  # pylint: disable=invalid-name
         """
         Tests the `append_syndromes_MUT` function.
         """
         step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
+                [two_rsc_blocks[0], two_rsc_blocks[1]],
             ]
         )
         valid_syndromes = (
             Syndrome(
-                stabilizer=self.rot_surf_code_1.stabilizers[0].uuid,
+                stabilizer=two_rsc_blocks[0].stabilizers[0].uuid,
                 measurements=(
                     ("c", 0),
                     ("c", 1),
                 ),
-                block=self.rot_surf_code_1.uuid,
+                block=two_rsc_blocks[0].uuid,
                 round=0,
             ),
         )
         step.append_syndromes_MUT(valid_syndromes)
-        self.assertEqual(step.syndromes, valid_syndromes)
+
+        assert step.syndromes == valid_syndromes
 
         valid_syndrome = Syndrome(
-            stabilizer=self.rot_surf_code_2.stabilizers[0].uuid,
+            stabilizer=two_rsc_blocks[1].stabilizers[0].uuid,
             measurements=(
                 ("c", 0),
                 ("c", 1),
             ),
-            block=self.rot_surf_code_2.uuid,
+            block=two_rsc_blocks[1].uuid,
             round=0,
         )
         step.append_syndromes_MUT(valid_syndrome)
-        self.assertEqual(step.syndromes, valid_syndromes + (valid_syndrome,))
+
+        assert step.syndromes == valid_syndromes + (valid_syndrome,)
 
         # Test that an error is raised if the syndromes are not of the right type
         invalid_syndrome = ("c", 0)
-        with self.assertRaises(TypeError) as cm:
+        with pytest.raises(TypeError) as cm:
             step.append_syndromes_MUT(invalid_syndrome)
-        self.assertIn(
-            "All elements in the tuple must be Syndrome objects.", str(cm.exception)
-        )
+
+        err_msg = "All elements in the tuple must be Syndrome objects."
+        assert err_msg in str(cm.value)
 
         invalid_syndrome = "hello world"
-        with self.assertRaises(TypeError) as cm:
+        with pytest.raises(TypeError) as cm:
             step.append_syndromes_MUT(invalid_syndrome)
-        self.assertIn(
-            "Syndrome must be a Syndrome object or a tuple of Syndromes",
-            str(cm.exception),
+        assert "Syndrome must be a Syndrome object or a tuple of Syndromes" in str(
+            cm.value
         )
 
-    def test_retrieve_cbits_from_stabilizers(self):
+    def test_retrieve_cbits_from_stabilizers(self, two_rsc_blocks):
         """
         Tests the `retrieve_cbits_from_stabilizers` function.
         """
         # Empty InterpretationStep
         empty_step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1],
+                [two_rsc_blocks[0]],
             ]
         )
         # Test that an error is raised if we try to retrieve cbits
-        with self.assertRaises(SyndromeMissingError) as cm:
+        with pytest.raises(SyndromeMissingError) as cm:
             empty_step.retrieve_cbits_from_stabilizers(
-                self.rot_surf_code_1.stabilizers, self.rot_surf_code_1
+                two_rsc_blocks[0].stabilizers, two_rsc_blocks[0]
             )
-        self.assertIn(
-            "Could not find a syndrome for some stabilizers.", str(cm.exception)
-        )
+        assert "Could not find a syndrome for some stabilizers." in str(cm.value)
 
         # InterpretationStep with syndromes for the stabilizers requested
         step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1],
+                [two_rsc_blocks[0]],
             ],
             syndromes=[
                 Syndrome(
                     stabilizer=stab.uuid,
                     measurements=((f"c_{stab.ancilla_qubits[0]}", 0),),
-                    block=self.rot_surf_code_1.uuid,
+                    block=two_rsc_blocks[0].uuid,
                     round=0,
                 )
-                for stab in self.rot_surf_code_1.stabilizers
+                for stab in two_rsc_blocks[0].stabilizers
             ],
         )
         # Test that all cbits are retrieved correctly
         cbits = step.retrieve_cbits_from_stabilizers(
-            self.rot_surf_code_1.stabilizers, self.rot_surf_code_1
+            two_rsc_blocks[0].stabilizers, two_rsc_blocks[0]
         )
         expected_cbits = tuple(
-            (f"c_{stab.ancilla_qubits[0]}", 0)
-            for stab in self.rot_surf_code_1.stabilizers
+            (f"c_{stab.ancilla_qubits[0]}", 0) for stab in two_rsc_blocks[0].stabilizers
         )
-        self.assertEqual(cbits, expected_cbits)
+        assert cbits == expected_cbits
 
         # Test that only the right cbits are returned in case we ask for a subset:
         # Add an extra syndrome to the step for the first stabilizer
         step.syndromes += (
             Syndrome(
-                stabilizer=self.rot_surf_code_1.stabilizers[0].uuid,
+                stabilizer=two_rsc_blocks[0].stabilizers[0].uuid,
                 measurements=(
-                    (f"c_{self.rot_surf_code_1.stabilizers[0].ancilla_qubits[0]}", 1),
+                    (f"c_{two_rsc_blocks[0].stabilizers[0].ancilla_qubits[0]}", 1),
                 ),
-                block=self.rot_surf_code_1.uuid,
+                block=two_rsc_blocks[0].uuid,
                 round=1,
             ),
         )
         # Retrieve only the cbits for the first two stabilizer
         cbits = step.retrieve_cbits_from_stabilizers(
-            self.rot_surf_code_1.stabilizers[:2], self.rot_surf_code_1
+            two_rsc_blocks[0].stabilizers[:2], two_rsc_blocks[0]
         )
         # The Cbit associated to the first stabilizer is associated to a new
         # measurement, round 1
         # The Cbit associated to the second stabilizer is associated the measurement of
         # round 0
         expected_cbits = (
-            (f"c_{self.rot_surf_code_1.stabilizers[0].ancilla_qubits[0]}", 1),
-            (f"c_{self.rot_surf_code_1.stabilizers[1].ancilla_qubits[0]}", 0),
+            (f"c_{two_rsc_blocks[0].stabilizers[0].ancilla_qubits[0]}", 1),
+            (f"c_{two_rsc_blocks[0].stabilizers[1].ancilla_qubits[0]}", 0),
         )
-        self.assertEqual(cbits, expected_cbits)
+        assert cbits == expected_cbits
 
-    def test_composite_operation_sessions(self):
+    def test_composite_operation_sessions(self, two_rsc_blocks):
         """
         Tests the begin_composite_operation_session_MUT and
         end_composite_operation_session_MUT functions.
         """
         step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
+                [two_rsc_blocks[0], two_rsc_blocks[1]],
             ]
         )
         had0 = Circuit(
             name="h",
-            channels=[step.get_channel_MUT(self.rot_surf_code_1.data_qubits[0])],
+            channels=[step.get_channel_MUT(two_rsc_blocks[0].data_qubits[0])],
         )
         # Initially, no composite operation sessions
-        self.assertEqual(step.composite_operation_session_stack, [])
+        assert step.composite_operation_session_stack == []
 
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as cm:
             step.end_composite_operation_session_MUT()
-        self.assertIn(
-            "No composite operation session to end. Please begin a session first.",
-            str(cm.exception),
+        assert (
+            "No composite operation session to end. Please begin a session first."
+            in str(cm.value)
         )
 
         # Create a composite operation session
@@ -950,7 +825,7 @@ class TestInterpretationStep(unittest.TestCase):
             same_timeslice=False, circuit_name="ses0_circuit_name"
         )
         ses0 = step.composite_operation_session_stack[-1]
-        self.assertEqual(ses0.start_timeslice_index, 0)
+        assert ses0.start_timeslice_index == 0
 
         # Append a circuit of duration 1 to the step
         ses_0_circuit_to_append = Circuit(name="1 hadamard", circuit=[[had0.clone()]])
@@ -961,8 +836,8 @@ class TestInterpretationStep(unittest.TestCase):
             same_timeslice=False, circuit_name="ses1_circuit_name"
         )
         ses1 = step.composite_operation_session_stack[-1]
-        self.assertEqual(ses1.start_timeslice_index, 1)
-        self.assertEqual(step.composite_operation_session_stack, [ses0, ses1])
+        assert ses1.start_timeslice_index == 1
+        assert step.composite_operation_session_stack == [ses0, ses1]
 
         # Append a circuit of duration 2 to the step
         ses_1_circuit_to_append = Circuit(
@@ -978,29 +853,26 @@ class TestInterpretationStep(unittest.TestCase):
         step.append_circuit_MUT(ses_0_circuit, False)
 
         # Check that the popped ses0_circuit is correct
-        self.assertEqual(
-            ses_0_circuit,
-            Circuit(
-                name="ses0_circuit_name",
-                circuit=[
-                    [had0.clone()],
-                    [had0.clone()],
-                    [had0.clone()],
-                ],
-            ),
+        assert ses_0_circuit == Circuit(
+            name="ses0_circuit_name",
+            circuit=[
+                [had0.clone()],
+                [had0.clone()],
+                [had0.clone()],
+            ],
         )
 
         # Check that the circuits have the right names and durations
-        self.assertEqual(ses_1_circuit.name, "ses1_circuit_name")
-        self.assertEqual(ses_1_circuit.duration, ses_1_circuit_to_append.duration)
-        self.assertEqual(ses_0_circuit.name, "ses0_circuit_name")
-        self.assertEqual(
-            ses_0_circuit.duration,
-            ses_0_circuit_to_append.duration + ses_1_circuit.duration,
+        assert ses_1_circuit.name == "ses1_circuit_name"
+        assert ses_1_circuit.duration == ses_1_circuit_to_append.duration
+        assert ses_0_circuit.name == "ses0_circuit_name"
+        assert (
+            ses_0_circuit.duration
+            == ses_0_circuit_to_append.duration + ses_1_circuit.duration
         )
-        self.assertEqual(step.composite_operation_session_stack, [])
+        assert step.composite_operation_session_stack == []
 
-    def test_timestamp_method_simple_ops(self):
+    def test_timestamp_method_simple_ops(self, two_rsc_blocks):
         """
         Tests the get_timestamp method function of the InterpretationStep class.
 
@@ -1012,16 +884,16 @@ class TestInterpretationStep(unittest.TestCase):
         """
         step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
+                [two_rsc_blocks[0], two_rsc_blocks[1]],
             ]
         )
         circuit_list = [
             Circuit("hadamard", channels=[step.get_channel_MUT(q)])
-            for q in self.rot_surf_code_1.qubits + self.rot_surf_code_2.qubits
+            for q in two_rsc_blocks[0].qubits + two_rsc_blocks[1].qubits
         ]
 
         # No circuits added yet, time should be 0
-        self.assertEqual(step.get_timestamp(), 0)
+        assert step.get_timestamp() == 0
 
         # - circuit_a
         step.append_circuit_MUT(
@@ -1031,7 +903,7 @@ class TestInterpretationStep(unittest.TestCase):
             ),
             same_timeslice=False,
         )
-        self.assertEqual(step.get_timestamp(), 3)
+        assert step.get_timestamp() == 3
 
         # - circuit_b
         step.append_circuit_MUT(
@@ -1041,7 +913,7 @@ class TestInterpretationStep(unittest.TestCase):
             ),
             same_timeslice=False,
         )
-        self.assertEqual(step.get_timestamp(), 5)
+        assert step.get_timestamp() == 5
 
         # - circuit_c
         step.append_circuit_MUT(
@@ -1051,7 +923,7 @@ class TestInterpretationStep(unittest.TestCase):
             ),
             same_timeslice=True,
         )
-        self.assertEqual(step.get_timestamp(), 8)
+        assert step.get_timestamp() == 8
 
         # - circuit_d
         step.append_circuit_MUT(
@@ -1061,7 +933,7 @@ class TestInterpretationStep(unittest.TestCase):
             ),
             same_timeslice=True,
         )
-        self.assertEqual(step.get_timestamp(), 6)
+        assert step.get_timestamp() == 6
 
         # - circuit_e
         step.append_circuit_MUT(
@@ -1071,9 +943,9 @@ class TestInterpretationStep(unittest.TestCase):
             ),
             same_timeslice=False,
         )
-        self.assertEqual(step.get_timestamp(), 11)
+        assert step.get_timestamp() == 11
 
-    def test_timestamp_method_composite_ops(self):
+    def test_timestamp_method_composite_ops(self, two_rsc_blocks):
         """
         Tests the get_timestamp method function of the InterpretationStep class in
         presence of composite operation sessions.
@@ -1106,17 +978,17 @@ class TestInterpretationStep(unittest.TestCase):
         # SetUp the InterpretationStep and get some Circuits to work with
         step = InterpretationStep(
             block_history=[
-                [self.rot_surf_code_1, self.rot_surf_code_2],
+                [two_rsc_blocks[0], two_rsc_blocks[1]],
             ]
         )
         circuit_list = [
             Circuit("hadamard", channels=[step.get_channel_MUT(q)])
-            for q in self.rot_surf_code_1.qubits + self.rot_surf_code_2.qubits
+            for q in two_rsc_blocks[0].qubits + two_rsc_blocks[1].qubits
         ]
 
         # No circuits added yet, time should be 0
         current_time = 0
-        self.assertEqual(step.get_timestamp(), 0)
+        assert step.get_timestamp() == 0
 
         # Append a Circuit of duration 2 and check that time is updated correctly
         step.append_circuit_MUT(
@@ -1126,7 +998,7 @@ class TestInterpretationStep(unittest.TestCase):
             )
         )
         current_time = 2
-        self.assertEqual(step.get_timestamp(), current_time)
+        assert step.get_timestamp() == current_time
 
         # --- Begin Session 0 ---
         step.begin_composite_operation_session_MUT(
@@ -1140,7 +1012,7 @@ class TestInterpretationStep(unittest.TestCase):
             )
         )
         current_time = 11
-        self.assertEqual(step.get_timestamp(), current_time)
+        assert step.get_timestamp() == current_time
         ses0_circuit = step.end_composite_operation_session_MUT()
         step.append_circuit_MUT(ses0_circuit, False)
         # --- End Session 0 ---
@@ -1160,7 +1032,7 @@ class TestInterpretationStep(unittest.TestCase):
             )
         )
         current_time = 2 + 2
-        self.assertEqual(step.get_timestamp(), current_time)
+        assert step.get_timestamp() == current_time
 
         # Now we shall start and end some sessions that will be in parallel
         nested_sessions_args_list = [
@@ -1193,7 +1065,7 @@ class TestInterpretationStep(unittest.TestCase):
 
             # Since these run in parallel to the previous circuit, time should be -
             # previous duration + new duration
-            self.assertEqual(step.get_timestamp(), session_args["time_after"])
+            assert step.get_timestamp() == session_args["time_after"]
             # End the last session and append the circuit back to the step
             ses_circuit = step.end_composite_operation_session_MUT()
             step.append_circuit_MUT(ses_circuit, session_args["same_timeslice"])
@@ -1204,7 +1076,7 @@ class TestInterpretationStep(unittest.TestCase):
         step.append_circuit_MUT(ses1_circuit, True)
         # Since Session 1 was the last thing that was appended to the step, the
         # timestamp should correspond to the end of Session 1 circuit, i.e. 9
-        self.assertEqual(step.get_timestamp(), 9)
+        assert step.get_timestamp() == 9
 
         # --- End Session 1 ---
 
@@ -1237,10 +1109,6 @@ class TestInterpretationStep(unittest.TestCase):
         )
 
         # 5. Assert that the expected ValueError is raised
-        with self.assertRaises(ValueError) as cm:
+        with pytest.raises(ValueError) as cm:
             step.append_circuit_MUT(next_circuit, same_timeslice=True)
-        self.assertIn(expected_error_msg, str(cm.exception))
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert expected_error_msg in str(cm.value)

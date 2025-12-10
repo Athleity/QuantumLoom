@@ -553,7 +553,7 @@ class InterpretationStep:  # pylint: disable=too-many-instance-attributes
             self.timeslice_durations.append(circuit.duration)
 
     @check_frozen
-    def pop_intermediate_circuit_MUT(  # pylint: disable=invalid-name
+    def _pop_intermediate_circuit_MUT(  # pylint: disable=invalid-name
         self, length: int
     ) -> tuple[tuple[Circuit, ...], ...]:
         """
@@ -669,7 +669,7 @@ class InterpretationStep:  # pylint: disable=too-many-instance-attributes
         operation_length = (
             len(self.intermediate_circuit_sequence) - session.start_timeslice_index
         )
-        circuit_sequence = self.pop_intermediate_circuit_MUT(operation_length)
+        circuit_sequence = self._pop_intermediate_circuit_MUT(operation_length)
 
         # Wrap the circuit sequence into a single Circuit object with proper alignment
         # and padding

@@ -584,7 +584,6 @@ def merge_stabilizers(  # pylint: disable=too-many-locals
     new_4_body_stabs = new_upleft_4_body_stabs + new_rest_4_body_stabs
 
     #    C.2) Create the new 2-body stabilizers
-    # new_top_left_is_xxxx = upper_left_4_body_pauli == "XXXX"
     stab_left_right_is_x = (
         block1.x_boundary == Orientation.HORIZONTAL
     )  # The logical operators are aligned
