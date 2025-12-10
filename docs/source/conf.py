@@ -9,7 +9,7 @@
 project = "el-loom"
 copyright = "2025, Entropica Labs Pte Ltd"
 author = "Entropica Labs Pte Ltd"
-release = "0.3.0"
+release = "0.3.1"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
