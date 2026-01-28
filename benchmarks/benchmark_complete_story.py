@@ -159,8 +159,8 @@ for batch_size in batch_sizes:
 # Visualization: The Complete Story
 # ============================================================================
 
-fig = plt.figure(figsize=(16, 10))
-gs = fig.add_gridspec(3, 2, hspace=0.3, wspace=0.3)
+fig = plt.figure(figsize=(16, 14))  # Increased height to 14
+gs = fig.add_gridspec(3, 2, hspace=0.4, wspace=0.3, height_ratios=[1, 1, 0.7])  # More spacing
 
 # Plot 1: Lattice Generation Time
 ax1 = fig.add_subplot(gs[0, 0])
@@ -218,48 +218,56 @@ ax4.set_title('SIMD Batch Processing Advantage', fontsize=12, fontweight='bold')
 ax4.grid(True, alpha=0.3)
 ax4.legend(fontsize=11)
 
-# Add max speedup annotation
+# Add max speedup annotation - FIXED to be inside graph
 max_idx = np.argmax([r['speedup_simd'] for r in batch_results])
 max_speedup = batch_results[max_idx]['speedup_simd']
 max_batch = batch_results[max_idx]['batch_size']
 ax4.annotate(f'Peak: {max_speedup:.0f}x faster', 
              xy=(max_batch, max_speedup),
-             xytext=(max_batch/10, max_speedup*0.7),
-             fontsize=11, fontweight='bold', color='green',
-             arrowprops=dict(arrowstyle='->', color='green', lw=2))
+             xytext=(max_batch*3, max_speedup*0.8),  # Moved to the right and lower
+             fontsize=11, fontweight='bold', color='darkgreen',
+             arrowprops=dict(arrowstyle='->', color='darkgreen', lw=2))
 
-# Plot 5: Summary Table
+# Plot 5: Summary Table (CLEAN SIMPLE BORDERS)
 ax5 = fig.add_subplot(gs[2, :])
 ax5.axis('off')
 
-summary_text = f"""
-╔══════════════════════════════════════════════════════════════════════════════════════╗
-║                            OPTIMIZATION SUMMARY                                       ║
-╠══════════════════════════════════════════════════════════════════════════════════════╣
-║                                                                                       ║
-║  LATTICE GENERATION                                                                   ║
-║    • Average C++ speedup:     {np.mean([r['speedup_cpp'] for r in gen_results]):6.1f}x faster than Python                    ║
-║    • Average SIMD speedup:    {np.mean([r['speedup_simd'] for r in gen_results]):6.1f}x faster than Python                   ║
-║    • Max throughput:          118.8M qubits/second                                    ║
-║                                                                                       ║
-║  BATCH INDEX CALCULATION (SIMD's Killer Feature)                                     ║
-║    • Peak SIMD speedup:       {max([r['speedup_simd'] for r in batch_results]):6.0f}x faster than Python                   ║
-║    • Peak SIMD vs C++:        {max([r['simd_vs_cpp'] for r in batch_results]):6.0f}x faster than C++ loops                 ║
-║    • Processing rate:         204 million indices/second                              ║
-║                                                                                       ║
-║  KEY ACHIEVEMENTS                                                                     ║
-║    ✓ Built C++20 extension with pybind11                                             ║
-║    ✓ Implemented SIMD vectorization (AVX2)                                           ║
-║    ✓ Achieved 330x speedup for batch operations                                      ║
-║    ✓ Scalable to millions of qubits                                                  ║
-║                                                                                       ║
-╚══════════════════════════════════════════════════════════════════════════════════════╝
-"""
+# Simple clean text without fancy borders
+summary_text = """
+                   OPTIMIZATION SUMMARY                       
 
+  LATTICE GENERATION                                          
+    • Average C++ speedup:      {cpp_avg:5.1f}x faster               
+    • Average SIMD speedup:     {simd_avg:5.1f}x faster              
+    • Max throughput:           118.8M qubits/second          
+
+  BATCH INDEX CALCULATION                                     
+    • Peak SIMD speedup:        {peak_simd:5.0f}x faster             
+    • Peak SIMD vs C++:         {peak_vs_cpp:5.0f}x improvement      
+    • Processing rate:          204M indices/second           
+
+  KEY ACHIEVEMENTS                                            
+    ✓ C++20 extension with pybind11                          
+    ✓ SIMD vectorization (AVX2)                              
+    ✓ 330x speedup for batch operations                      
+    ✓ Scalable to millions of qubits                         
+""".format(
+    cpp_avg=np.mean([r['speedup_cpp'] for r in gen_results]),
+    simd_avg=np.mean([r['speedup_simd'] for r in gen_results]),
+    peak_simd=max([r['speedup_simd'] for r in batch_results]),
+    peak_vs_cpp=max([r['simd_vs_cpp'] for r in batch_results])
+)
+
+# Place text with simple box - no fancy borders
 ax5.text(0.5, 0.5, summary_text, 
          fontsize=10, family='monospace',
          ha='center', va='center',
-         bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
+         bbox=dict(boxstyle='round,pad=1.0', 
+                   facecolor='wheat', 
+                   alpha=0.3, 
+                   edgecolor='black', 
+                   linewidth=2),
+         transform=ax5.transAxes)
 
 plt.suptitle('Complete Optimization Journey: Python → C++ → SIMD', 
              fontsize=16, fontweight='bold', y=0.98)
