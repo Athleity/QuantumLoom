@@ -1,16 +1,35 @@
+# Compiled Python
+*.pyc
+*.pyd
+*.pyo
 __pycache__/
-.venv
-.vscode/*
-.python-version
+*.so
+*.dylib
+*.dll
 
-docs/build/*
-docs/source/apidoc/api_autogen/*
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
 
-env/
+# IDE
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
 
-.python-version
+# OS
+.DS_Store
+Thumbs.db
 
-*.DS_Store
+# Temporary
+*.tmp
+*.log
+.cache/
 
-_revision.py
-test_env/
+# Keep results but not huge data files
+benchmarks/results/data/*.csv
+benchmarks/results/data/*.json
+!benchmarks/results/plots/*.png
