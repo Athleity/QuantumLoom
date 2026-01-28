@@ -21,10 +21,6 @@ Built on top of [Entropica Labs' el-loom](https://github.com/entropicalabs/el-lo
 | **Memory Efficiency** | **83% reduction** vs Python | 💾 Optimized |
 | **Noise Generation** | **6.95ns per Gaussian** | 📊 SIMD-competitive |
 
-<p align="center">
-  <img src="https://github.com/Athleity/QuantumLoom/raw/main/benchmarks/results/plots/complete_story.png" alt="Performance Comparison" width="800"/>
-</p>
-
 ---
 
 ## 📊 Visual Results
@@ -61,8 +57,6 @@ python setup.py build_ext --inplace
 cd ../fast_lattice_ext
 python setup_simd.py build_ext --inplace
 ```
-
-**Detailed build instructions:** See [BUILD.md](BUILD.md)
 
 ---
 
@@ -283,8 +277,6 @@ We welcome contributions! Please:
 2. Create a feature branch
 3. Add tests/benchmarks
 4. Submit a pull request
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ---
 
