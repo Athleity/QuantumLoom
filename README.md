@@ -21,22 +21,22 @@ Built on top of [Entropica Labs' el-loom](https://github.com/entropicalabs/el-lo
 | **Memory Efficiency** | **83% reduction** vs Python | 💾 Optimized |
 | **Noise Generation** | **6.95ns per Gaussian** | 📊 SIMD-competitive |
 
+<p align="center">
+  <img src="https://github.com/Athleity/QuantumLoom/raw/main/benchmarks/results/plots/complete_story.png" alt="Performance Comparison" width="800"/>
+</p>
+
 ---
 
 ## 📊 Visual Results
 
-<div align="center">
-
 ### Complete Optimization Journey
-[![Complete Story](benchmarks/results/plots/complete_story.png)](benchmarks/results/plots/complete_story.png)
+![Complete Story](https://github.com/Athleity/QuantumLoom/raw/main/benchmarks/results/plots/complete_story.png)
 
 ### Entropy Core Performance (4M Qubits)
-[![Entropy Core](benchmarks/results/plots/entropy_core_pro.png)](benchmarks/results/plots/entropy_core_pro.png)
+![Entropy Core](https://github.com/Athleity/QuantumLoom/raw/main/benchmarks/results/plots/entropy_core_pro.png)
 
 ### SIMD Batch Processing
-[![SIMD Details](benchmarks/results/plots/simd_detailed_benchmark.png)](benchmarks/results/plots/simd_detailed_benchmark.png)
-
-</div>
+![SIMD Details](https://github.com/Athleity/QuantumLoom/raw/main/benchmarks/results/plots/simd_detailed_benchmark.png)
 
 ---
 
@@ -313,12 +313,8 @@ Questions? Open an [issue](https://github.com/Athleity/QuantumLoom/issues)!
 
 ---
 
-<div align="center">
-
 ⭐ **Star this repo if you find it useful!** ⭐
 
 [Report Bug](https://github.com/Athleity/QuantumLoom/issues) · 
 [Request Feature](https://github.com/Athleity/QuantumLoom/issues) · 
-[Documentation](docs/)
-
-</div>
+[Documentation](docs)
