@@ -25,8 +25,7 @@ Built on top of [Entropica Labs' el-loom](https://github.com/entropicalabs/el-lo
 
 ## 📊 Visual Results
 
-### Complete Optimization Journey
-![Complete Story](https://github.com/Athleity/QuantumLoom/raw/main/benchmarks/results/plots/complete_story.png)
+### Complete Optimization Journey![Complete Story](https://github.com/Athleity/QuantumLoom/raw/main/benchmarks/results/plots/complete_story.png?v=2)
 
 ### Entropy Core Performance (4M Qubits)
 ![Entropy Core](https://github.com/Athleity/QuantumLoom/raw/main/benchmarks/results/plots/entropy_core_pro.png)
