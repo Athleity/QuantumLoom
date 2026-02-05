@@ -1,4 +1,4 @@
-# 🚀 QuantumLoom: High-Performance Quantum Simulation Engine
+# QuantumLoom: High-Performance Quantum Simulation Engine
 
 [![Performance](https://img.shields.io/badge/Performance-330x_faster-brightgreen)](benchmarks/results/plots/complete_story.png)
 [![Throughput](https://img.shields.io/badge/Throughput-226k_qubits%2Fms-blue)](benchmarks/results/plots/entropy_core_pro.png)
@@ -11,19 +11,19 @@ Built on top of [Entropica Labs' el-loom](https://github.com/entropicalabs/el-lo
 
 ---
 
-## 🌟 Performance Highlights
+##  Performance Highlights
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| **Peak Throughput** | **226,000 qubits/ms** | 🚀 Production-ready |
-| **4M Qubit Pipeline** | **50.9ms** end-to-end | ⚡ Real-time capable |
-| **SIMD Batch Processing** | **330x vs naive loops** | 🏆 Publication-quality |
-| **Memory Efficiency** | **83% reduction** vs Python | 💾 Optimized |
-| **Noise Generation** | **6.95ns per Gaussian** | 📊 SIMD-competitive |
+| **Peak Throughput** | **226,000 qubits/ms** |  Production-ready |
+| **4M Qubit Pipeline** | **50.9ms** end-to-end |  Real-time capable |
+| **SIMD Batch Processing** | **330x vs naive loops** |  Publication-quality |
+| **Memory Efficiency** | **83% reduction** vs Python |  Optimized |
+| **Noise Generation** | **6.95ns per Gaussian** | SIMD-competitive |
 
 ---
 
-## 📊 Visual Results
+##  Visual Results
 
 ### Complete Optimization Journey![Complete Story](https://github.com/Athleity/QuantumLoom/raw/main/benchmarks/results/plots/complete_story.png?v=2)
 
@@ -36,7 +36,7 @@ Built on top of [Entropica Labs' el-loom](https://github.com/entropicalabs/el-lo
 
 ---
 
-## ⚡ Quick Start
+##  Quick Start
 
 ### Installation
 
@@ -60,7 +60,7 @@ python setup_simd.py build_ext --inplace
 
 ---
 
-## 🎯 Usage Examples
+##  Usage Examples
 
 ### Entropy-Aware Lattice (Best Performance)
 
@@ -120,16 +120,16 @@ idx = lattice.get_flat_index_2d(50, 75, 1)  # ~3 nanoseconds
 
 ---
 
-## 🏗️ Project Structure
+##  Project Structure
 
 ```
 QuantumLoom/
 ├── src/elloom/
-│   ├── entropy_core/              # ⭐ 226k qubits/ms (recommended)
+│   ├── entropy_core/              #  226k qubits/ms (recommended)
 │   │   ├── fast_lattice_entropy.cpp
 │   │   ├── entropy_source.cpp/hpp
 │   │   └── setup.py
-│   ├── fast_lattice_ext/          # ⭐ SIMD batch (330x speedup)
+│   ├── fast_lattice_ext/          #  SIMD batch (330x speedup)
 │   │   ├── fast_lattice.cpp
 │   │   ├── fast_lattice_simd.cpp
 │   │   └── setup_simd.py
@@ -149,7 +149,7 @@ QuantumLoom/
 
 ---
 
-## 📈 Performance Breakdown
+##  Performance Breakdown
 
 ### Lattice Generation (Python → C++ → SIMD)
 
@@ -179,15 +179,15 @@ QuantumLoom/
 
 | Lattice Size | Throughput | Overhead | Status |
 |--------------|------------|----------|--------|
-| 100×100 | **226k qubits/ms** | 73.9% | ✅ Excellent |
-| 200×200 | 97k qubits/ms | 106.4% | ✅ Good |
-| 2000×2000 | 79k qubits/ms | 139.6% | ✅ Good |
+| 100×100 | **226k qubits/ms** | 73.9% |  Excellent |
+| 200×200 | 97k qubits/ms | 106.4% |  Good |
+| 2000×2000 | 79k qubits/ms | 139.6% |  Good |
 
 **4M qubits:** 50.9ms total (pure + noise + overhead)
 
 ---
 
-## 🔬 Technical Details
+##  Technical Details
 
 ### Key Innovations
 
@@ -221,7 +221,7 @@ QuantumLoom/
 
 ---
 
-## 🧪 Benchmarks
+##  Benchmarks
 
 Run the complete benchmark suite:
 
@@ -248,8 +248,8 @@ python benchmark_complete_story.py     # Full optimization journey
 **Impact:**
 ```
 500,000 coordinate lookups:
-- Naive C++ loop:  873ms (794,000 QEC cycles) ❌ Impractical
-- SIMD batch:      2.9ms (2,600 QEC cycles)   ✅ Real-time capable
+- Naive C++ loop:  873ms (794,000 QEC cycles)  Impractical
+- SIMD batch:      2.9ms (2,600 QEC cycles)    Real-time capable
 ```
 
 ### Citation
@@ -269,7 +269,7 @@ If you use this work, please cite:
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 We welcome contributions! Please:
 
@@ -280,7 +280,7 @@ We welcome contributions! Please:
 
 ---
 
-## 📄 License
+##  License
 
 MIT License - see [LICENSE](LICENSE) for details
 
@@ -288,7 +288,7 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ---
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - **Entropica Labs** for the original el-loom framework
 - **Google Quantum AI** for inspiring real-world QEC benchmarks
@@ -296,7 +296,7 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ---
 
-## 📬 Contact
+##  Contact
 
 **Author:** Priyansh Bhavsar  
 **GitHub:** [@Athleity](https://github.com/Athleity)
