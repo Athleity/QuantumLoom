@@ -256,15 +256,16 @@ python benchmark_complete_story.py     # Full optimization journey
 
 If you use this work, please cite:
 
-```bibtex
-@software{quantumloom2026,
-  author = {Bhavsar, Priyansh},
-  title = {QuantumLoom: High-Performance Lattice Indexing 
-           for Quantum Error Correction},
-  year = {2026},
-  url = {https://github.com/Athleity/QuantumLoom},
-  note = {330x speedup, 226k qubits/ms, based on el-loom}
-}
+## 📖 Citation
+
+```yaml
+name: QuantumLoom
+author: Priyansh Bhavsar
+year: 2026
+description: High-Performance Lattice Indexing for Quantum Error Correction
+github: https://github.com/Athleity/QuantumLoom
+performance: 330x speedup, 226k qubits/ms
+baseline: el-loom
 ```
 
 ---
